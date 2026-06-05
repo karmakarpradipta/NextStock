@@ -10,8 +10,30 @@ import { Mutex } from 'async-mutex';
 
 const mutex = new Mutex();
 
+const getBaseUrl = () => {
+  // Use relative URLs in development to leverage Vite's proxy (handles CORS automatically)
+  if (import.meta.env.DEV) return '';
+
+  const url = import.meta.env.VITE_API_URL;
+  if (!url || url === '/') return '';
+
+  // If it's already a full URL, use it as is
+  if (url.startsWith('http')) return url.endsWith('/') ? url.slice(0, -1) : url;
+
+  // Build absolute URL for production/built app
+  const isLocal = url.includes('localhost') || url.includes('127.0.0.1');
+  const protocol = isLocal ? 'http' : 'https';
+  const port = isLocal && import.meta.env.VITE_API_PORT ? `:${import.meta.env.VITE_API_PORT}` : '';
+  
+  // Remove trailing slash if present
+  const normalizedUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+  
+  return `${protocol}://${normalizedUrl}${port}`;
+};
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL === '/' ? '' : import.meta.env.VITE_API_URL,
+  baseUrl: getBaseUrl(),
+  credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
     if (token) {
@@ -23,7 +45,8 @@ const baseQuery = fetchBaseQuery({
 
 // Same-origin via Vite proxy — cookies are sent automatically
 const baseQueryWithCredentials = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL === '/' ? '' : import.meta.env.VITE_API_URL,
+  baseUrl: getBaseUrl(),
+  credentials: 'include',
 });
 
 const baseQueryWithReauth: BaseQueryFn<

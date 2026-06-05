@@ -63,7 +63,9 @@ const SaleDetail = () => {
   useEffect(() => {
     if (sale) {
       setLabel(id!, sale.invoiceNumber);
-      setPaidAmount(sale.paidAmount.toString());
+      // Pre-fill with remaining balance (needed amount)
+      const remaining = sale.totalAmount - sale.paidAmount;
+      setPaidAmount(remaining > 0 ? remaining.toString() : "0");
     }
   }, [sale, setLabel, id]);
 
@@ -88,13 +90,25 @@ const SaleDetail = () => {
   };
 
   const handlePayment = async () => {
-    const amount = parseFloat(paidAmount);
-    if (isNaN(amount) || amount < 0) {
+    const additionalAmount = parseFloat(paidAmount);
+    if (isNaN(additionalAmount) || additionalAmount < 0) {
       toast.error("Please enter a valid amount");
       return;
     }
+
+    if (!sale) return;
+
+    // Calculate new total paid amount
+    const newTotalPaid = sale.paidAmount + additionalAmount;
+    
+    if (newTotalPaid > sale.totalAmount) {
+      if (!window.confirm(`The total paid amount (₹${newTotalPaid.toLocaleString()}) exceeds the invoice total (₹${sale.totalAmount.toLocaleString()}). Do you want to proceed?`)) {
+        return;
+      }
+    }
+
     try {
-      await updatePayment({ id: id!, paidAmount: amount }).unwrap();
+      await updatePayment({ id: id!, paidAmount: newTotalPaid }).unwrap();
       toast.success("Payment information updated");
       setIsPaymentModalOpen(false);
     } catch (err: any) {
@@ -326,16 +340,16 @@ const SaleDetail = () => {
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                      <CreditCard className="h-5 w-5" />
                   </div>
-                  Receive Payment
+                  Record Payment
                </DialogTitle>
                <DialogDescription>
-                  Enter the total amount received from the customer for this invoice.
+                  Enter the amount currently received from the customer. This will be added to the total paid amount.
                </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 pt-4">
                <div className="grid gap-2">
-                  <Label className="text-sm font-bold">Received Amount (₹)</Label>
+                  <Label className="text-sm font-bold">Amount to Pay (₹)</Label>
                   <div className="relative">
                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                      <Input 
@@ -343,9 +357,13 @@ const SaleDetail = () => {
                        value={paidAmount} 
                        onChange={(e) => setPaidAmount(e.target.value)}
                        className="h-14 pl-10 text-xl font-black"
+                       placeholder="0.00"
                      />
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">Total Sale Value: ₹{sale.totalAmount.toLocaleString()}</p>
+                  <div className="flex justify-between text-[10px] font-medium text-muted-foreground">
+                    <span>Invoice Total: ₹{sale.totalAmount.toLocaleString()}</span>
+                    <span>Remaining: ₹{(sale.totalAmount - sale.paidAmount).toLocaleString()}</span>
+                  </div>
                </div>
 
                <Button 

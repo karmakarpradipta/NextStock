@@ -110,10 +110,10 @@ export function CreateUserModal() {
                   defaultValue={field.value}
                   disabled={isLoading}
                 >
-                  <SelectTrigger id="role" className="cursor-pointer">
+                  <SelectTrigger id="role" className="w-full cursor-pointer">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     <SelectItem value="STAFF" className="cursor-pointer">Staff</SelectItem>
                     <SelectItem value="ADMIN" className="cursor-pointer">Admin</SelectItem>
                   </SelectContent>

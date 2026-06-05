@@ -68,7 +68,9 @@ const PurchaseDetail = () => {
   useEffect(() => {
     if (purchase) {
       setLabel(id!, purchase.orderNumber);
-      setPaidAmount(purchase.paidAmount.toString());
+      // Pre-fill with remaining balance (needed amount)
+      const remaining = purchase.totalAmount - purchase.paidAmount;
+      setPaidAmount(remaining > 0 ? remaining.toString() : "0");
     }
   }, [purchase, setLabel, id]);
 
@@ -136,13 +138,25 @@ const PurchaseDetail = () => {
   };
 
   const handlePayment = async () => {
-    const amount = parseFloat(paidAmount);
-    if (isNaN(amount) || amount < 0) {
+    const additionalAmount = parseFloat(paidAmount);
+    if (isNaN(additionalAmount) || additionalAmount < 0) {
       toast.error("Please enter a valid amount");
       return;
     }
+
+    if (!purchase) return;
+
+    // Calculate new total paid amount
+    const newTotalPaid = purchase.paidAmount + additionalAmount;
+    
+    if (newTotalPaid > purchase.totalAmount) {
+      if (!window.confirm(`The total paid amount (₹${newTotalPaid.toLocaleString()}) exceeds the order total (₹${purchase.totalAmount.toLocaleString()}). Do you want to proceed?`)) {
+        return;
+      }
+    }
+
     try {
-      await updatePayment({ id: id!, paidAmount: amount }).unwrap();
+      await updatePayment({ id: id!, paidAmount: newTotalPaid }).unwrap();
       toast.success("Payment information updated");
       setIsPaymentModalOpen(false);
     } catch (err: any) {
@@ -411,16 +425,16 @@ const PurchaseDetail = () => {
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                      <CreditCard className="h-5 w-5" />
                   </div>
-                  Update Payment
+                  Record Payment
                </DialogTitle>
                <DialogDescription>
-                  Enter the total amount paid to the vendor for this order.
+                  Enter the amount currently paid to the vendor. This will be added to the total paid amount.
                </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 pt-4">
                <div className="grid gap-2">
-                  <Label className="text-sm font-bold">Paid Amount (₹)</Label>
+                  <Label className="text-sm font-bold">Amount to Pay (₹)</Label>
                   <div className="relative">
                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                      <Input 
@@ -428,9 +442,13 @@ const PurchaseDetail = () => {
                        value={paidAmount} 
                        onChange={(e) => setPaidAmount(e.target.value)}
                        className="h-14 pl-10 text-xl font-black"
+                       placeholder="0.00"
                      />
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">Total Order Value: ₹{purchase.totalAmount.toLocaleString()}</p>
+                  <div className="flex justify-between text-[10px] font-medium text-muted-foreground">
+                    <span>Order Total: ₹{purchase.totalAmount.toLocaleString()}</span>
+                    <span>Remaining: ₹{(purchase.totalAmount - purchase.paidAmount).toLocaleString()}</span>
+                  </div>
                </div>
 
                <Button 

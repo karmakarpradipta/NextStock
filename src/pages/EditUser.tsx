@@ -76,6 +76,11 @@ const EditUser = () => {
     formState: { errors: profileErrors, isDirty: isProfileDirty },
   } = useForm<UpdateUserValues>({
     resolver: zodResolver(updateUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      role: "STAFF",
+    },
   });
 
   // Password Form
@@ -195,11 +200,11 @@ const EditUser = () => {
         ) : user ? (
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tight">{user.name}</h1>
-            <p className="text-lg text-muted-foreground flex items-center gap-2">
+            <div className="text-lg text-muted-foreground flex items-center gap-2">
               {user.email} 
               <Separator orientation="vertical" className="h-4 bg-muted-foreground/30" />
               <span className="font-medium text-foreground/80">{user.role}</span>
-            </p>
+            </div>
           </div>
         ) : (
           <div className="text-center py-12 space-y-4">
@@ -271,10 +276,10 @@ const EditUser = () => {
                       control={controlProfile}
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value} disabled={isUpdating}>
-                          <SelectTrigger className="h-12 bg-background text-base px-4 cursor-pointer">
-                            <SelectValue />
+                          <SelectTrigger className="!h-12 w-full bg-background text-base px-4 cursor-pointer">
+                            <SelectValue placeholder="Select role" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper">
                             <SelectItem value="STAFF" className="cursor-pointer py-3">Staff Member</SelectItem>
                             <SelectItem value="ADMIN" className="cursor-pointer py-3">Administrator</SelectItem>
                           </SelectContent>
