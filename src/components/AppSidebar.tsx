@@ -11,6 +11,8 @@ import {
   Package,
   ShoppingCart,
   Banknote,
+  FileText,
+  Activity,
 } from "lucide-react"
 
 import {
@@ -66,6 +68,11 @@ export function AppSidebar() {
       icon: Package,
     },
     {
+      title: "Stock Management",
+      url: "/inventory/stock",
+      icon: Activity,
+    },
+    {
       title: "Categories",
       url: "/inventory/categories",
       icon: FolderTree,
@@ -84,6 +91,11 @@ export function AppSidebar() {
       title: "Sales",
       url: "/sales",
       icon: Banknote,
+    },
+    {
+      title: "Reports",
+      url: "/reports",
+      icon: FileText,
     },
     ...(user?.role === "ADMIN" ? [
       {
@@ -143,13 +155,13 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-[--radix-popper-anchor-width] rounded-xl"
               >
-                <DropdownMenuItem disabled>
+                <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>Profile & Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>

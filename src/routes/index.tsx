@@ -8,6 +8,7 @@ import Dashboard from "../pages/Dashboard";
 import Users from "../pages/Users";
 import EditUser from "../pages/EditUser";
 import Categories from "../pages/Categories";
+import Inventory from "../pages/Inventory";
 import Products from "../pages/Products";
 import ProductForm from "../pages/ProductForm";
 import ProductDetail from "../pages/ProductDetail";
@@ -20,6 +21,8 @@ import SaleDetail from "../pages/SaleDetail";
 import Vendors from "../pages/Vendors";
 import VendorForm from "../pages/VendorForm";
 import VendorDetail from "../pages/VendorDetail";
+import Reports from "../pages/Reports";
+import Profile from "../pages/Profile";
 import NotFound from "../pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -54,7 +57,7 @@ export const router = createBrowserRouter([
               { path: "products/add", element: <ProductForm /> },
               { path: "products/:id", element: <ProductDetail /> },
               { path: "products/:id/edit", element: <ProductForm /> },
-              { path: "", element: <Navigate to="products" replace /> },
+              { path: "stock", element: <Inventory /> },
             ]
           },
           { path: "vendors", element: <Vendors /> },
@@ -69,6 +72,8 @@ export const router = createBrowserRouter([
           { path: "sales/add", element: <SaleForm /> },
           { path: "sales/:id", element: <SaleDetail /> },
           { path: "sales/:id/edit", element: <SaleForm /> },
+          { path: "reports", element: <Reports /> },
+          { path: "profile", element: <Profile /> },
         ],
       },
     ],

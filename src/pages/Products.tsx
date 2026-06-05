@@ -41,14 +41,16 @@ import {
 } from "../components/ui/select";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppSelector } from "../store/hooks";
 import { selectCurrentUser } from "../features/auth/authSlice";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../components/ui/skeleton";
+import { useEffect } from "react";
 
 const Products = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const user = useAppSelector(selectCurrentUser);
   const isAdmin = user?.role === "ADMIN";
 
@@ -58,8 +60,15 @@ const Products = () => {
     search: "",
     categoryId: "",
     isActive: "",
-    lowStock: "",
+    lowStock: searchParams.get("lowStock") === "true" ? "true" : "",
   });
+
+  useEffect(() => {
+    const lowStock = searchParams.get("lowStock");
+    if (lowStock === "true") {
+      setFilters(prev => ({ ...prev, lowStock: "true", page: 1 }));
+    }
+  }, [searchParams]);
 
   const { data, isLoading, refetch, isFetching } = useGetProductsQuery(filters);
   const { data: categories } = useGetCategoriesQuery();
@@ -122,7 +131,7 @@ const Products = () => {
           />
         </div>
         
-        <Select onValueChange={handleCategoryChange}>
+        <Select onValueChange={handleCategoryChange} value={filters.categoryId || "all"}>
           <SelectTrigger>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
@@ -134,7 +143,7 @@ const Products = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleStatusChange}>
+        <Select onValueChange={handleStatusChange} value={filters.isActive === "" ? "all" : String(filters.isActive)}>
           <SelectTrigger>
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
@@ -145,7 +154,7 @@ const Products = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleStockFilter}>
+        <Select onValueChange={handleStockFilter} value={filters.lowStock || "all"}>
           <SelectTrigger>
             <SelectValue placeholder="Stock Level" />
           </SelectTrigger>
