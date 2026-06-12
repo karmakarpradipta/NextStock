@@ -13,6 +13,7 @@ import {
   Banknote,
   FileText,
   Activity,
+  ClipboardList
 } from "lucide-react"
 
 import {
@@ -24,6 +25,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
@@ -36,6 +38,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../store/hooks"
 import { logOut, selectCurrentUser } from "../features/auth/authSlice"
 import { useLogoutMutation } from "../features/auth/authApiSlice"
+import { useGetRequisitionsQuery } from "../features/inventory/requisitionApiSlice"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 
 export function AppSidebar() {
@@ -44,6 +47,12 @@ export function AppSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [logout] = useLogoutMutation()
+
+  const { data: pendingReqs } = useGetRequisitionsQuery(
+    { status: "PENDING", limit: 1 },
+    { skip: user?.role !== "ADMIN" }
+  )
+  const pendingCount = pendingReqs?.pagination.total || 0
 
   const handleLogout = async () => {
     try {
@@ -97,11 +106,22 @@ export function AppSidebar() {
       url: "/reports",
       icon: FileText,
     },
+    {
+      title: "Requisitions",
+      url: "/requisitions",
+      icon: ClipboardList,
+      badge: user?.role === "ADMIN" && pendingCount > 0 ? pendingCount : undefined,
+    },
     ...(user?.role === "ADMIN" ? [
       {
         title: "User Management",
         url: "/users",
         icon: UserCog,
+      },
+      {
+        title: "Audit Log",
+        url: "/audit",
+        icon: Activity,
       }
     ] : []),
   ]
@@ -127,13 +147,17 @@ export function AppSidebar() {
                     asChild 
                     isActive={location.pathname === item.url || location.pathname.startsWith(item.url)} 
                     tooltip={item.title}
-                    className="group-data-[state=collapsed]:justify-center"
                   >
                     <Link to={item.url}>
-                      <item.icon className="shrink-0" />
-                      <span className="group-data-[state=collapsed]:hidden">{item.title}</span>
+                      <item.icon />
+                      <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+                  {item.badge && (
+                    <SidebarMenuBadge className="bg-primary text-primary-foreground text-[10px] h-5 min-w-5 rounded-full px-1">
+                      {item.badge}
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -155,7 +179,7 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width] rounded-xl"
+                className="w-[--radix-popper-anchor-width] rounded-md"
               >
                 <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />

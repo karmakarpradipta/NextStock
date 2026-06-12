@@ -6,6 +6,7 @@ import PublicRoute from "../components/common/PublicRoute";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Users from "../pages/Users";
+import AuditLog from "../pages/AuditLog";
 import EditUser from "../pages/EditUser";
 import Categories from "../pages/Categories";
 import Inventory from "../pages/Inventory";
@@ -15,6 +16,7 @@ import ProductDetail from "../pages/ProductDetail";
 import Purchases from "../pages/Purchases";
 import PurchaseForm from "../pages/PurchaseForm";
 import PurchaseDetail from "../pages/PurchaseDetail";
+import Requisitions from "../pages/Requisitions";
 import Sales from "../pages/Sales";
 import SaleForm from "../pages/SaleForm";
 import SaleDetail from "../pages/SaleDetail";
@@ -68,6 +70,7 @@ export const router = createBrowserRouter([
           { path: "purchases/add", element: <PurchaseForm /> },
           { path: "purchases/:id", element: <PurchaseDetail /> },
           { path: "purchases/:id/edit", element: <PurchaseForm /> },
+          { path: "requisitions", element: <Requisitions /> },
           { path: "sales", element: <Sales /> },
           { path: "sales/add", element: <SaleForm /> },
           { path: "sales/:id", element: <SaleDetail /> },
@@ -88,6 +91,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "users", element: <Users /> },
           { path: "users/:id/edit", element: <EditUser /> },
+          { path: "audit", element: <AuditLog /> },
         ],
       },
     ],

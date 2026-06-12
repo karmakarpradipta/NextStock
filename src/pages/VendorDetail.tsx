@@ -10,7 +10,6 @@ import {
   Phone, 
   MapPin, 
   FileText,
-  TrendingUp,
   Package,
   Clock,
   Contact2
@@ -20,7 +19,6 @@ import { Separator } from "../components/ui/separator";
 import { Label } from "../components/ui/label";
 import { useEffect } from "react";
 import { useBreadcrumb } from "@/context/BreadcrumbContext";
-import { motion } from "framer-motion";
 
 const VendorDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -82,15 +80,15 @@ const VendorDetail = () => {
 
           <div className="flex gap-8 px-2">
             <div className="text-center md:text-right">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Performance</p>
-              <div className="text-3xl font-black text-primary flex items-baseline gap-1 justify-end">
-                {vendor.performance?.onTimeDeliveryRate || 0}<span className="text-sm font-bold">%</span>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Performance</p>
+              <div className="text-3xl font-bold text-primary flex items-baseline gap-1 justify-end">
+                {vendor.performance?.onTimeDeliveryRate || 0}<span className="text-sm font-semibold">%</span>
               </div>
             </div>
             <Separator orientation="vertical" className="h-10 hidden md:block" />
             <div className="text-center md:text-right">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Orders</p>
-              <div className="text-3xl font-black">{vendor._count?.purchaseOrders || 0}</div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Total Orders</p>
+              <div className="text-3xl font-bold">{vendor._count?.purchaseOrders || 0}</div>
             </div>
           </div>
         </div>
@@ -103,19 +101,19 @@ const VendorDetail = () => {
         {/* Sidebar Info */}
         <div className="lg:col-span-4 space-y-10">
           <section className="space-y-6">
-            <div className="flex items-center gap-3 text-primary font-bold">
+            <div className="flex items-center gap-3 text-primary font-semibold">
               <Contact2 className="h-5 w-5" />
-              <h3 className="text-xl">Contact Information</h3>
+              <h3 className="text-xl font-bold">Contact Information</h3>
             </div>
             
             <div className="space-y-6">
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Primary Contact</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tighter">Primary Contact</Label>
                 <p className="font-semibold text-lg">{vendor.contactPerson || "—"}</p>
               </div>
 
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Email Address</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tighter">Email Address</Label>
                 <div className="flex items-center gap-2 font-medium">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   {vendor.email || "No email provided"}
@@ -123,7 +121,7 @@ const VendorDetail = () => {
               </div>
 
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Phone Number</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tighter">Phone Number</Label>
                 <div className="flex items-center gap-2 font-medium">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   {vendor.phone || "No phone provided"}
@@ -135,22 +133,22 @@ const VendorDetail = () => {
           <Separator className="opacity-30" />
 
           <section className="space-y-6">
-            <div className="flex items-center gap-3 text-primary font-bold">
+            <div className="flex items-center gap-3 text-primary font-semibold">
               <MapPin className="h-5 w-5" />
-              <h3 className="text-xl">Office Address</h3>
+              <h3 className="text-xl font-bold">Office Address</h3>
             </div>
-            <p className="text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-4 py-1">
+            <p className="text-muted-foreground leading-relaxed border-l-2 border-primary/20 pl-4 py-1">
               {vendor.address || "No physical address specified."}
             </p>
           </section>
 
           <section className="space-y-6">
-             <div className="flex items-center gap-3 text-primary font-bold">
+             <div className="flex items-center gap-3 text-primary font-semibold">
               <FileText className="h-5 w-5" />
-              <h3 className="text-xl">Registration</h3>
+              <h3 className="text-xl font-bold">Registration</h3>
             </div>
             <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">GST Number</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tighter">GST Number</Label>
                 <p className="font-mono text-sm bg-muted/50 px-3 py-2 rounded-md w-fit border">{vendor.gstNumber || "Not Registered"}</p>
             </div>
           </section>
@@ -160,35 +158,35 @@ const VendorDetail = () => {
         <div className="lg:col-span-8 space-y-16">
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 font-bold">
+              <div className="flex items-center gap-3 font-semibold">
                 <Package className="h-5 w-5 text-primary" />
-                <h3 className="text-2xl">Mapped Products</h3>
-                <Badge variant="secondary" className="rounded-full h-6 w-6 p-0 flex items-center justify-center font-bold">
+                <h3 className="text-2xl font-bold">Mapped Products</h3>
+                <Badge variant="secondary" className="rounded-full h-6 w-6 p-0 flex items-center justify-center font-semibold">
                   {vendor._count?.vendorProducts || 0}
                 </Badge>
               </div>
-              <Button variant="link" className="text-primary font-bold">Manage Mapping</Button>
+              <Button variant="link" className="text-primary font-semibold">Manage Mapping</Button>
             </div>
-            <div className="border border-dashed rounded-2xl h-48 flex items-center justify-center bg-muted/10">
+            <div className="border border-dashed rounded-lg h-48 flex items-center justify-center bg-muted/10">
                <div className="text-center space-y-1">
-                  <p className="text-muted-foreground font-medium italic">Integrated product list coming soon</p>
-                  <p className="text-[10px] text-muted-foreground uppercase">Linked items for purchase ordering</p>
+                  <p className="text-muted-foreground font-medium">Integrated product list coming soon</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-medium">Linked items for purchase ordering</p>
                </div>
             </div>
           </section>
 
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 font-bold">
+              <div className="flex items-center gap-3 font-semibold">
                 <Clock className="h-5 w-5 text-primary" />
-                <h3 className="text-2xl">Recent Activity</h3>
+                <h3 className="text-2xl font-bold">Recent Activity</h3>
               </div>
-              <Button variant="link" className="text-primary font-bold">View History</Button>
+              <Button variant="link" className="text-primary font-semibold">View History</Button>
             </div>
-            <div className="border border-dashed rounded-2xl h-64 flex items-center justify-center bg-muted/10">
+            <div className="border border-dashed rounded-lg h-64 flex items-center justify-center bg-muted/10">
                <div className="text-center space-y-1">
-                  <p className="text-muted-foreground font-medium italic">Order timeline & fulfillment history</p>
-                  <p className="text-[10px] text-muted-foreground uppercase">Tracking performance across transactions</p>
+                  <p className="text-muted-foreground font-medium">Order timeline & fulfillment history</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-medium">Tracking performance across transactions</p>
                </div>
             </div>
           </section>

@@ -28,18 +28,14 @@ import {
   Plus, 
   Trash2, 
   Banknote,
-  Calendar,
   User,
   Package,
-  IndianRupee,
-  Phone,
-  Mail,
-  FileText
+  IndianRupee
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBreadcrumb } from "@/context/BreadcrumbContext";
-import { cn } from "@/lib/utils";
+import { UnsavedChangesDialog } from "../components/common/UnsavedChangesDialog";
 
 const SaleForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -123,6 +119,7 @@ const SaleForm = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20 px-4">
+      <UnsavedChangesDialog isDirty={isDirty} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -147,27 +144,27 @@ const SaleForm = () => {
         <div className="lg:col-span-8 space-y-12">
            {/* Section 1: Customer Details */}
            <section className="space-y-6">
-              <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+              <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                  <User className="h-4 w-4" />
                  <span>Customer Information</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Customer Name</Label>
-                    <Input {...register("customerName")} placeholder="e.g. Arjun Mehta" className="h-12 bg-background/50" />
+                    <Input {...register("customerName")} placeholder="e.g. Arjun Mehta" className="h-12 bg-background/50 rounded-md" />
                  </div>
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Phone Number</Label>
-                    <Input {...register("customerPhone")} placeholder="91XXXXXXXX" className="h-12 bg-background/50" />
+                    <Input {...register("customerPhone")} placeholder="91XXXXXXXX" className="h-12 bg-background/50 rounded-md" />
                  </div>
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Email Address</Label>
-                    <Input type="email" {...register("customerEmail")} placeholder="customer@example.com" className="h-12 bg-background/50" />
+                    <Input type="email" {...register("customerEmail")} placeholder="customer@example.com" className="h-12 bg-background/50 rounded-md" />
                     {errors.customerEmail && <p className="text-xs text-destructive">{errors.customerEmail.message}</p>}
                  </div>
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Sale Date</Label>
-                    <Input type="date" {...register("saleDate")} className="h-12 bg-background/50" />
+                    <Input type="date" {...register("saleDate")} className="h-12 bg-background/50 rounded-md" />
                  </div>
               </div>
            </section>
@@ -177,7 +174,7 @@ const SaleForm = () => {
            {/* Section 2: Items List */}
            <section className="space-y-6">
               <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+                 <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                     <Package className="h-4 w-4" />
                     <span>Line Items</span>
                  </div>
@@ -200,19 +197,19 @@ const SaleForm = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-muted/20 p-4 rounded-xl border border-muted-foreground/10 group"
+                        className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-muted/20 p-4 rounded-lg border border-muted-foreground/10 group"
                       >
                          <div className="md:col-span-6 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Product</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Product</Label>
                             <Controller
                               name={`items.${index}.productId`}
                               control={control}
                               render={({ field }) => (
                                 <Select onValueChange={field.onChange} value={field.value}>
-                                  <SelectTrigger className="h-10 bg-background cursor-pointer">
+                                  <SelectTrigger className="h-10 bg-background cursor-pointer rounded-md">
                                     <SelectValue placeholder="Select Item" />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="rounded-md">
                                     {productsData?.products.filter(p => p.isActive).map(p => (
                                       <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku}) — Stock: {p.currentStock}</SelectItem>
                                     ))}
@@ -223,23 +220,23 @@ const SaleForm = () => {
                          </div>
 
                          <div className="md:col-span-2 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Quantity</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Quantity</Label>
                             <Input 
                               type="number" 
                               {...register(`items.${index}.quantity`, { valueAsNumber: true })} 
-                              className="h-10 bg-background font-bold text-center" 
+                              className="h-10 bg-background font-semibold text-center rounded-md" 
                             />
                          </div>
 
                          <div className="md:col-span-3 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Unit Price</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Unit Price</Label>
                             <div className="relative">
                                <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                                <Input 
                                  type="number" 
                                  step="0.01" 
                                  {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} 
-                                 className="h-10 pl-7 bg-background font-bold" 
+                                 className="h-10 pl-7 bg-background font-semibold rounded-md" 
                                />
                             </div>
                          </div>
@@ -266,9 +263,9 @@ const SaleForm = () => {
 
         {/* Sidebar: Summary & Actions */}
         <div className="lg:col-span-4 space-y-6">
-           <div className="rounded-2xl border bg-card p-6 space-y-6 shadow-sm sticky top-24">
+           <div className="rounded-lg border bg-card p-6 space-y-6 shadow-sm sticky top-24">
               <div className="space-y-4">
-                 <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+                 <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                     <Banknote className="h-4 w-4" />
                     <span>Sale Summary</span>
                  </div>
@@ -276,7 +273,7 @@ const SaleForm = () => {
                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Total Items</span>
-                       <span className="font-bold">{watchItems?.length || 0}</span>
+                       <span className="font-semibold">{watchItems?.length || 0}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Status</span>
@@ -284,18 +281,18 @@ const SaleForm = () => {
                     </div>
                     <Separator />
                     <div className="flex justify-between items-baseline pt-2">
-                       <span className="font-bold text-base">Grand Total</span>
-                       <span className="text-3xl font-black text-primary">₹{totalAmount.toLocaleString()}</span>
+                       <span className="font-semibold text-base">Grand Total</span>
+                       <span className="text-3xl font-bold text-primary">₹{totalAmount.toLocaleString()}</span>
                     </div>
                  </div>
               </div>
 
               <div className="grid gap-4 pt-4">
                  <div className="grid gap-2">
-                    <Label className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">Internal Notes</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-tighter text-muted-foreground">Internal Notes</Label>
                     <textarea 
                       {...register("notes")} 
-                      className="min-h-[100px] w-full rounded-xl border bg-muted/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                      className="min-h-[100px] w-full rounded-md border bg-muted/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                       placeholder="Special customer requests..."
                     />
                  </div>
@@ -305,7 +302,7 @@ const SaleForm = () => {
                  <Button 
                    type="submit" 
                    disabled={isCreating || isUpdating || !isDirty} 
-                   className="w-full h-14 text-base font-bold rounded-2xl shadow-xl shadow-primary/20 cursor-pointer"
+                   className="w-full h-14 text-base font-semibold rounded-md shadow-lg shadow-primary/20 cursor-pointer"
                  >
                     {isCreating || isUpdating ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -320,7 +317,7 @@ const SaleForm = () => {
                    type="button" 
                    variant="ghost" 
                    onClick={() => navigate("/sales")} 
-                   className="w-full h-12 rounded-xl text-muted-foreground cursor-pointer hover:bg-muted/50"
+                   className="w-full h-12 rounded-md text-muted-foreground cursor-pointer hover:bg-muted/50"
                  >
                     Cancel
                  </Button>

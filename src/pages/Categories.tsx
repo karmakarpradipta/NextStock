@@ -19,6 +19,13 @@ import {
   TableRow,
 } from "../components/ui/table";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "../components/ui/pagination";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -39,9 +46,7 @@ import {
   FolderTree,
   RotateCw,
   Activity,
-  ArrowRight,
-  TrendingUp,
-  AlertTriangle
+  ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppSelector } from "../store/hooks";
@@ -60,11 +65,13 @@ const Categories = () => {
   
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
-  const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   const {
     register,
@@ -129,9 +136,17 @@ const Categories = () => {
     reset();
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+  };
+
   const filteredCategories = (categories || []).filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const paginatedCategories = filteredCategories.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.ceil(filteredCategories.length / limit) || 1;
 
   // Helper to get stats for a category
   const getCategoryStats = (categoryId: string) => {
@@ -146,12 +161,12 @@ const Categories = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-3xl bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20 border-4 border-background">
+          <div className="h-14 w-14 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20 border-4 border-background">
             <FolderTree className="h-7 w-7" />
           </div>
           <div>
-            <h2 className="text-4xl font-black tracking-tighter">Categories</h2>
-            <div className="flex items-center gap-2 text-muted-foreground text-sm font-bold uppercase tracking-widest mt-1">
+            <h2 className="text-4xl font-bold tracking-tighter">Categories</h2>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium uppercase tracking-widest mt-1">
                <Activity className="h-3.5 w-3.5 text-primary" />
                Taxonomy & Organization
             </div>
@@ -162,18 +177,18 @@ const Categories = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Find category..." 
-                className="pl-9 h-11 border-none bg-card shadow-sm rounded-xl text-foreground"
+                className="pl-9 h-11 border-none bg-card shadow-sm rounded-md text-foreground"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
               />
            </div>
            {isAdmin && (
-             <Button onClick={() => handleOpenModal()} className="h-11 px-6 rounded-xl font-black shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90">
+             <Button onClick={() => handleOpenModal()} className="h-11 px-6 rounded-md font-semibold shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90">
                <Plus className="mr-2 h-4 w-4" />
                New Category
              </Button>
            )}
-           <Button variant="outline" size="icon" onClick={() => refetch()} className="h-11 w-11 rounded-xl cursor-pointer border-border">
+           <Button variant="outline" size="icon" onClick={() => refetch()} className="h-11 w-11 rounded-md cursor-pointer border-border">
               <RotateCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
            </Button>
         </div>
@@ -182,139 +197,183 @@ const Categories = () => {
       {isLoading ? (
         <div className="space-y-4">
            {[...Array(5)].map((_, i) => (
-             <Skeleton key={i} className="h-16 w-full rounded-xl" />
+             <Skeleton key={i} className="h-16 w-full rounded-lg" />
            ))}
         </div>
       ) : isError ? (
-        <div className="text-center py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-destructive/20">
-           <p className="text-xl font-bold text-muted-foreground">Failed to load categories</p>
-           <Button variant="link" onClick={() => refetch()} className="text-primary font-bold">Try Again</Button>
+        <div className="text-center py-20 bg-card rounded-lg border-2 border-dashed border-destructive/20">
+           <p className="text-xl font-medium text-muted-foreground">Failed to load categories</p>
+           <Button variant="link" onClick={() => refetch()} className="text-primary font-semibold">Try Again</Button>
         </div>
       ) : (
-        <div className="rounded-[2rem] border border-border bg-card shadow-md overflow-hidden">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow className="hover:bg-transparent border-border">
-                <TableHead className="py-6 px-8 text-foreground font-black uppercase text-[10px] tracking-widest">Category Name</TableHead>
-                <TableHead className="text-center text-foreground font-black uppercase text-[10px] tracking-widest">Products</TableHead>
-                <TableHead className="text-center text-foreground font-black uppercase text-[10px] tracking-widest">Total Stock</TableHead>
-                <TableHead className="text-center text-foreground font-black uppercase text-[10px] tracking-widest">Health Status</TableHead>
-                <TableHead className="text-right px-8 text-foreground font-black uppercase text-[10px] tracking-widest">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                       <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                          <FolderTree className="h-8 w-8" />
-                       </div>
-                       <p className="text-lg font-bold text-muted-foreground">No categories found</p>
-                    </div>
-                  </TableCell>
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border bg-card shadow-md overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="hover:bg-transparent border-border">
+                  <TableHead className="py-6 px-8 text-foreground font-semibold uppercase text-[10px] tracking-widest">Category Name</TableHead>
+                  <TableHead className="text-center text-foreground font-semibold uppercase text-[10px] tracking-widest">Products</TableHead>
+                  <TableHead className="text-center text-foreground font-semibold uppercase text-[10px] tracking-widest">Total Stock</TableHead>
+                  <TableHead className="text-center text-foreground font-semibold uppercase text-[10px] tracking-widest">Health Status</TableHead>
+                  <TableHead className="text-right px-8 text-foreground font-semibold uppercase text-[10px] tracking-widest">Actions</TableHead>
                 </TableRow>
-              ) : (
-                filteredCategories.map((category) => {
-                  const stats = getCategoryStats(category.id);
-                  const isHealthy = stats.lowStockCount === 0;
-                  
-                  return (
-                    <TableRow key={category.id} className="group transition-colors hover:bg-muted/20 border-b border-border">
-                      <TableCell className="py-5 px-8">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                             <span className="font-black text-sm tracking-tight group-hover:text-primary transition-colors cursor-pointer text-foreground" onClick={() => handleOpenModal(category)}>
-                               {category.name}
-                             </span>
-                             {category.isActive ? (
-                               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[8px] uppercase tracking-widest px-1.5 py-0">Active</Badge>
+              </TableHeader>
+              <TableBody>
+                {paginatedCategories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-[400px] text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500">
+                        <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
+                          <FolderTree className="h-10 w-10 text-primary/40" />
+                        </div>
+                        <div className="space-y-2 max-w-[280px] mx-auto">
+                          <p className="text-xl font-bold tracking-tight">No categories found</p>
+                          <p className="text-sm text-muted-foreground font-medium">No inventory categories match your search. Try adjusting your query.</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setSearchTerm("");
+                            setPage(1);
+                          }}
+                          className="rounded-full px-6 font-semibold"
+                        >
+                          Reset Search
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedCategories.map((category) => {
+                    const stats = getCategoryStats(category.id);
+                    const isHealthy = stats.lowStockCount === 0;
+                    
+                    return (
+                      <TableRow key={category.id} className="group transition-colors hover:bg-muted/20 border-b border-border">
+                        <TableCell className="py-5 px-8">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                               <span className="font-semibold text-sm tracking-tight group-hover:text-primary transition-colors cursor-pointer text-foreground" onClick={() => handleOpenModal(category)}>
+                                 {category.name}
+                               </span>
+                               {category.isActive ? (
+                                 <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-medium text-[8px] uppercase tracking-widest px-1.5 py-0">Active</Badge>
+                               ) : (
+                                 <Badge variant="secondary" className="font-medium text-[8px] uppercase tracking-widest px-1.5 py-0">Inactive</Badge>
+                               )}
+                            </div>
+                            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-0.5">ID: {category.id.slice(0, 8)}...</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                           <span className="font-medium text-sm text-foreground">{stats.productCount}</span>
+                        </TableCell>
+                        <TableCell className="text-center font-medium text-sm text-foreground">
+                           {stats.totalStock}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1.5">
+                             {isHealthy ? (
+                               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-0.5 font-medium text-[9px] uppercase tracking-widest">Optimal</Badge>
                              ) : (
-                               <Badge variant="secondary" className="font-black text-[8px] uppercase tracking-widest px-1.5 py-0">Inactive</Badge>
+                               <Badge variant="destructive" className="animate-pulse px-3 py-0.5 font-medium text-[9px] uppercase tracking-widest border-none">
+                                 {stats.lowStockCount} Critical
+                               </Badge>
+                             )}
+                             <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={cn("h-full", isHealthy ? "bg-primary" : "bg-destructive")}
+                                  style={{ width: stats.productCount > 0 ? `${((stats.productCount - stats.lowStockCount) / stats.productCount) * 100}%` : '0%' }}
+                                />
+                             </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right px-8">
+                          <div className="flex items-center justify-end gap-2">
+                             <Button 
+                              variant="ghost" 
+                              className="h-9 px-4 rounded-md font-semibold text-[10px] uppercase tracking-widest bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-all border border-border shadow-sm group/btn"
+                              onClick={() => navigate(`/inventory/products?categoryId=${category.id}`)}
+                             >
+                                Items
+                                <ArrowRight className="ml-1.5 h-3 w-3 transition-transform group-hover/btn:translate-x-0.5" />
+                             </Button>
+                             {isAdmin && (
+                               <>
+                                 <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-9 w-9 rounded-md bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-all border border-border shadow-sm"
+                                  onClick={() => handleOpenModal(category)}
+                                  title="Edit Category"
+                                 >
+                                    <Edit className="h-4 w-4" />
+                                 </Button>
+                                 <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-9 w-9 rounded-md bg-accent text-accent-foreground hover:bg-destructive hover:text-destructive-foreground transition-all border border-border shadow-sm"
+                                  onClick={() => handleDelete(category.id, stats.productCount)}
+                                  title="Delete Category"
+                                 >
+                                    <Trash2 className="h-4 w-4" />
+                                 </Button>
+                               </>
                              )}
                           </div>
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 italic">ID: {category.id.slice(0, 8)}...</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                         <span className="font-black text-sm text-foreground">{stats.productCount}</span>
-                      </TableCell>
-                      <TableCell className="text-center font-bold text-sm text-foreground">
-                         {stats.totalStock}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex flex-col items-center gap-1.5">
-                           {isHealthy ? (
-                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 px-3 py-0.5 font-black text-[9px] uppercase tracking-widest">Optimal</Badge>
-                           ) : (
-                             <Badge variant="destructive" className="animate-pulse px-3 py-0.5 font-black text-[9px] uppercase tracking-widest border-none">
-                               {stats.lowStockCount} Critical
-                             </Badge>
-                           )}
-                           <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className={cn("h-full", isHealthy ? "bg-primary" : "bg-destructive")}
-                                style={{ width: stats.productCount > 0 ? `${((stats.productCount - stats.lowStockCount) / stats.productCount) * 100}%` : '0%' }}
-                              />
-                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                        <div className="flex items-center justify-end gap-2">
-                           <Button 
-                            variant="ghost" 
-                            className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-all border border-border shadow-sm group/btn"
-                            onClick={() => navigate(`/inventory/products?categoryId=${category.id}`)}
-                           >
-                              Items
-                              <ArrowRight className="ml-1.5 h-3 w-3 transition-transform group-hover/btn:translate-x-0.5" />
-                           </Button>
-                           {isAdmin && (
-                             <>
-                               <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-xl bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-all border border-border shadow-sm"
-                                onClick={() => handleOpenModal(category)}
-                                title="Edit Category"
-                               >
-                                  <Edit className="h-4 w-4" />
-                               </Button>
-                               <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-xl bg-accent text-accent-foreground hover:bg-destructive hover:text-destructive-foreground transition-all border border-border shadow-sm"
-                                onClick={() => handleDelete(category.id, stats.productCount)}
-                                title="Delete Category"
-                               >
-                                  <Trash2 className="h-4 w-4" />
-                               </Button>
-                             </>
-                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {!isLoading && categories && (
+            <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
+              <div className="text-sm text-muted-foreground font-medium">
+                Showing <span className="text-foreground font-semibold">{paginatedCategories.length}</span> of <span className="text-foreground font-semibold">{filteredCategories.length}</span> categories
+              </div>
+              <Pagination className="w-auto mx-0">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      className={cn("cursor-pointer", page <= 1 && "pointer-events-none opacity-50")} 
+                      onClick={() => setPage(p => Math.max(1, p - 1))} 
+                    />
+                  </PaginationItem>
+                  <div className="px-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    Page {page} / {totalPages}
+                  </div>
+                  <PaginationItem>
+                    <PaginationNext 
+                      className={cn("cursor-pointer", page >= totalPages && "pointer-events-none opacity-50")} 
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       )}
 
       {/* Category Dialog */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none p-10 max-w-md bg-card">
+        <DialogContent className="rounded-lg border-none p-10 max-w-md bg-card">
            <DialogHeader className="space-y-4">
               <div className="flex items-center gap-4">
-                 <div className="h-14 w-14 rounded-3xl bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20">
+                 <div className="h-14 w-14 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20">
                     <FolderTree className="h-7 w-7" />
                  </div>
                  <div className="text-left">
-                    <DialogTitle className="text-3xl font-black tracking-tighter text-foreground">
+                    <DialogTitle className="text-3xl font-bold tracking-tighter text-foreground">
                        {editingCategory ? "Update Category" : "New Category"}
                     </DialogTitle>
-                    <DialogDescription className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest">
+                    <DialogDescription className="font-medium text-muted-foreground uppercase text-[10px] tracking-widest">
                        Organize your catalog items
                     </DialogDescription>
                  </div>
@@ -323,20 +382,20 @@ const Categories = () => {
 
            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pt-6 text-foreground">
               <div className="space-y-2">
-                 <Label htmlFor="name" className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">Category Name</Label>
+                 <Label htmlFor="name" className="text-xs font-medium uppercase tracking-widest text-muted-foreground px-1">Category Name</Label>
                  <Input 
                    id="name" 
                    {...register("name")} 
-                   className="h-14 border-none bg-muted/50 rounded-2xl font-bold text-lg text-foreground"
+                   className="h-14 border-none bg-muted/50 rounded-md font-medium text-lg text-foreground"
                    placeholder="e.g. Raw Materials, Finished Goods..."
                  />
-                 {errors.name && <p className="text-[10px] font-black text-destructive uppercase tracking-widest px-1">{errors.name.message}</p>}
+                 {errors.name && <p className="text-[10px] font-medium text-destructive uppercase tracking-widest px-1">{errors.name.message}</p>}
               </div>
 
-              <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-border">
+              <div className="flex items-center justify-between p-5 bg-muted/30 rounded-lg border border-border">
                  <div className="space-y-0.5">
-                    <Label className="text-sm font-black text-foreground">Active Status</Label>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest italic">Allow items in this category</p>
+                    <Label className="text-sm font-semibold text-foreground">Active Status</Label>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Allow items in this category</p>
                  </div>
                  <Switch 
                    checked={editingCategory?.isActive ?? true}
@@ -347,7 +406,7 @@ const Categories = () => {
               <Button 
                 type="submit" 
                 disabled={isCreating || isUpdating}
-                className="w-full h-16 rounded-[1.5rem] text-lg font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all cursor-pointer"
+                className="w-full h-16 rounded-md text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all cursor-pointer"
               >
                  {isCreating || isUpdating ? <Loader2 className="h-6 w-6 animate-spin" /> : editingCategory ? "Commit Changes" : "Establish Category"}
               </Button>

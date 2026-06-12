@@ -16,6 +16,7 @@ import { Separator } from "../components/ui/separator";
 import { Loader2, ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useBreadcrumb } from "@/context/BreadcrumbContext";
+import { UnsavedChangesDialog } from "../components/common/UnsavedChangesDialog";
 
 const FieldError = ({ message }: { message?: string }) =>
   message ? <p className="text-xs text-destructive mt-1">{message}</p> : null;
@@ -91,6 +92,7 @@ const VendorForm = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-20 px-4">
+      <UnsavedChangesDialog isDirty={isDirty} />
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/vendors")} className="rounded-full cursor-pointer">
@@ -164,7 +166,7 @@ const VendorForm = () => {
         {/* Right: Sidebar */}
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 lg:self-start">
           {/* Status */}
-          <div className="rounded-xl border bg-card p-5 space-y-4">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="isActive" className="text-sm font-semibold cursor-pointer">Active Vendor</Label>
@@ -185,7 +187,7 @@ const VendorForm = () => {
             <Button
               type="submit"
               disabled={loading || !isDirty}
-              className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/15 cursor-pointer rounded-xl"
+              className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/15 cursor-pointer rounded-lg"
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -198,7 +200,7 @@ const VendorForm = () => {
               type="button"
               variant="ghost"
               onClick={() => navigate("/vendors")}
-              className="w-full h-11 cursor-pointer text-muted-foreground hover:bg-muted/50 rounded-xl"
+              className="w-full h-11 cursor-pointer text-muted-foreground hover:bg-muted/50 rounded-lg"
             >
               Cancel
             </Button>

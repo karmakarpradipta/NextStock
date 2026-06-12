@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../lib/utils";
+import { UnsavedChangesDialog } from "../components/common/UnsavedChangesDialog";
 
 const ProductForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,7 +63,7 @@ const ProductForm = () => {
     control,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProductValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -191,6 +192,7 @@ useEffect(() => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-20 px-4">
+      <UnsavedChangesDialog isDirty={isDirty || !!imageFile} />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/inventory/products")} className="rounded-full cursor-pointer">
           <ArrowLeft className="h-5 w-5" />
@@ -210,15 +212,15 @@ useEffect(() => {
             <div className="grid gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="prod-name" className="text-sm font-semibold">Product Name</Label>
-                <Input id="prod-name" {...register("name")} placeholder="e.g. Wireless Mouse" className="h-12 bg-background/50 text-base" />
+                <Input id="prod-name" {...register("name")} placeholder="e.g. Wireless Mouse" className="h-12 bg-background/50 text-base rounded-md" />
                 {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
               </div>
 
               <div className="grid gap-2">
                 <Label htmlFor="prod-sku" className="text-sm font-semibold">SKU / Product Code</Label>
                 <div className="flex gap-2">
-                  <Input id="prod-sku" {...register("sku")} placeholder="e.g. MS-001" className="h-12 font-mono bg-background/50 text-base" />
-                  <Button type="button" variant="outline" onClick={generateSKU} className="h-12 px-3 cursor-pointer border-dashed hover:border-primary transition-all" title="Generate SKU">
+                  <Input id="prod-sku" {...register("sku")} placeholder="e.g. MS-001" className="h-12 font-mono bg-background/50 text-base rounded-md" />
+                  <Button type="button" variant="outline" onClick={generateSKU} className="h-12 px-3 cursor-pointer border-dashed hover:border-primary transition-all rounded-md" title="Generate SKU">
                     <Wand2 className="h-5 w-5" />
                   </Button>
                 </div>
@@ -227,7 +229,7 @@ useEffect(() => {
 
               <div className="grid gap-2">
                 <Label htmlFor="prod-desc" className="text-sm font-semibold">Description</Label>
-                <Textarea id="prod-desc" {...register("description")} placeholder="Provide a detailed description..." className="min-h-[120px] bg-background/50 text-base py-3" />
+                <Textarea id="prod-desc" {...register("description")} placeholder="Provide a detailed description..." className="min-h-[120px] bg-background/50 text-base py-3 rounded-md" />
               </div>
             </div>
 
@@ -242,7 +244,7 @@ useEffect(() => {
                       onValueChange={field.onChange} 
                       value={field.value ? String(field.value) : ""}
                     >
-                      <SelectTrigger className="h-12 bg-background/50 text-base cursor-pointer">
+                      <SelectTrigger className="h-12 bg-background/50 text-base cursor-pointer rounded-md">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -265,7 +267,7 @@ useEffect(() => {
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-12 bg-background/50 text-base cursor-pointer">
+                      <SelectTrigger className="h-12 bg-background/50 text-base cursor-pointer rounded-md">
                         <SelectValue placeholder="Select Unit" />
                       </SelectTrigger>
                       <SelectContent>
@@ -283,7 +285,7 @@ useEffect(() => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="prod-threshold" className="text-sm font-semibold">Min Threshold</Label>
-                <Input id="prod-threshold" type="number" {...register("minStockThreshold", { valueAsNumber: true })} className="h-12 bg-background/50 text-base" />
+                <Input id="prod-threshold" type="number" {...register("minStockThreshold", { valueAsNumber: true })} className="h-12 bg-background/50 text-base rounded-md" />
                 {errors.minStockThreshold && <p className="text-xs text-destructive">{errors.minStockThreshold.message}</p>}
               </div>
             </div>
@@ -293,10 +295,10 @@ useEffect(() => {
         {/* Media & Actions */}
         <div className="lg:col-span-4 space-y-8">
           <section className="space-y-4">
-            <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Product Image</Label>
+            <Label className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Product Image</Label>
             <div 
               className={cn(
-                "relative group aspect-square rounded-3xl border-2 border-dashed flex flex-col items-center justify-center transition-all overflow-hidden bg-muted/20",
+                "relative group aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-all overflow-hidden bg-muted/20",
                 !displayPreview && "hover:bg-muted/40 hover:border-primary/50 cursor-pointer"
               )}
               onClick={() => !displayPreview && document.getElementById('image-upload')?.click()}
@@ -331,7 +333,7 @@ useEffect(() => {
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center gap-2 p-6 text-center"
                   >
-                    <div className="h-12 w-12 rounded-2xl bg-background flex items-center justify-center text-muted-foreground shadow-sm group-hover:text-primary transition-colors">
+                    <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center text-muted-foreground shadow-sm group-hover:text-primary transition-colors">
                       <ImagePlus className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
@@ -351,9 +353,9 @@ useEffect(() => {
             </div>
           </section>
 
-          <section className="bg-muted/30 p-6 rounded-3xl border border-muted-foreground/10 space-y-4">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Status</Label>
-            <div className="flex items-center justify-between bg-background p-4 rounded-xl border shadow-sm">
+          <section className="bg-muted/30 p-6 rounded-lg border border-muted-foreground/10 space-y-4">
+            <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product Status</Label>
+            <div className="flex items-center justify-between bg-background p-4 rounded-lg border shadow-sm">
               <span className="text-sm font-medium">Active Visibility</span>
               <Controller
                 name="isActive"
@@ -363,7 +365,7 @@ useEffect(() => {
                 )}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground italic leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               When inactive, the product will be hidden from the storefront but remain in the dashboard.
             </p>
           </section>
@@ -372,7 +374,7 @@ useEffect(() => {
              <Button 
               type="submit" 
               disabled={isCreating || isUpdating || isImageUploading} 
-              className="w-full h-14 text-base font-bold shadow-xl shadow-primary/20 cursor-pointer rounded-2xl"
+              className="w-full h-14 text-base font-semibold shadow-xl shadow-primary/20 cursor-pointer rounded-md"
             >
               {isCreating || isUpdating || isImageUploading ? (
                 <>
@@ -390,7 +392,7 @@ useEffect(() => {
               type="button" 
               variant="ghost" 
               onClick={() => navigate("/inventory/products")} 
-              className="w-full h-12 cursor-pointer hover:bg-muted/50 rounded-2xl text-muted-foreground"
+              className="w-full h-12 cursor-pointer hover:bg-muted/50 rounded-md text-muted-foreground"
             >
               Cancel & Exit
             </Button>

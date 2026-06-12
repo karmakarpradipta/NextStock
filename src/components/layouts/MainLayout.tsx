@@ -3,6 +3,8 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "../AppSidebar";
 import { ThemeToggle } from "../ThemeToggle";
+import { Maximize, Minimize, Home, Package, FolderTree, Users, ShoppingCart, Banknote, FileText, ClipboardList, Activity, UserCog } from "lucide-react";
+import { Button } from "../ui/button";
 import { motion } from "framer-motion";
 import { Separator } from "../ui/separator";
 import {
@@ -27,10 +29,45 @@ const labels: Record<string, string> = {
   users: "User Management",
 };
 
+const icons: Record<string, any> = {
+  products: Package,
+  categories: FolderTree,
+  vendors: Users,
+  purchases: ShoppingCart,
+  sales: Banknote,
+  reports: FileText,
+  requisitions: ClipboardList,
+  users: UserCog,
+  audit: Activity,
+  stock: Activity,
+};
+
 const MainLayout = () => {
   const location = useLocation();
   const { dynamicLabels } = useBreadcrumb();
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
   const pathnames = location.pathname.split("/").filter((x) => x);
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const breadcrumbItems = pathnames
     .reduce<{ name: string; originalIndex: number }[]>((acc, name, i) => {
@@ -59,7 +96,7 @@ const MainLayout = () => {
             : name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, " "));
       }
 
-      return { label, routeTo, name };
+      return { label, routeTo, name, Icon: icons[name] };
     });
 
   return (
@@ -75,8 +112,9 @@ const MainLayout = () => {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/dashboard" className="flex items-center gap-1">
-                        Home
+                      <Link to="/dashboard" className="flex items-center gap-1.5 transition-colors hover:text-primary">
+                        <Home className="h-4 w-4" />
+                        <span className="font-medium">Home</span>
                       </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
@@ -86,10 +124,16 @@ const MainLayout = () => {
                       <BreadcrumbSeparator />
                       <BreadcrumbItem>
                         {index === breadcrumbItems.length - 1 ? (
-                          <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                          <BreadcrumbPage className="flex items-center gap-1.5 font-semibold text-foreground">
+                            {item.Icon && <item.Icon className="h-3.5 w-3.5" />}
+                            {item.label}
+                          </BreadcrumbPage>
                         ) : (
                           <BreadcrumbLink asChild>
-                            <Link to={item.routeTo}>{item.label}</Link>
+                            <Link to={item.routeTo} className="flex items-center gap-1.5 transition-colors hover:text-primary">
+                              {item.Icon && <item.Icon className="h-3.5 w-3.5" />}
+                              {item.label}
+                            </Link>
                           </BreadcrumbLink>
                         )}
                       </BreadcrumbItem>
@@ -101,7 +145,22 @@ const MainLayout = () => {
             <h1 className="md:hidden text-sm font-medium text-muted-foreground truncate">
               NextStock
             </h1>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleFullscreen}
+                className="h-9 w-9 rounded-md hover:bg-accent transition-colors cursor-pointer"
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              >
+                {isFullscreen ? (
+                  <Minimize className="h-[1.2rem] w-[1.2rem]" />
+                ) : (
+                  <Maximize className="h-[1.2rem] w-[1.2rem]" />
+                )}
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <motion.main 

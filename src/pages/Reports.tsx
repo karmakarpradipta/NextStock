@@ -1,9 +1,6 @@
 import { 
   FileText, 
   Download, 
-  Search, 
-  Calendar, 
-  Filter, 
   AlertTriangle,
   ShoppingCart,
   Banknote,
@@ -13,17 +10,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useAppSelector } from "../store/hooks";
-import { selectCurrentUser } from "../features/auth/authSlice";
 import { downloadReport } from "../utils/downloadFile";
-import { cn } from "@/lib/utils";
 
 const Reports = () => {
-  const user = useAppSelector(selectCurrentUser);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const handleDownload = async (endpoint: string, filename: string, format: "pdf" | "csv") => {
@@ -77,11 +67,11 @@ const Reports = () => {
     <div className="space-y-8 pb-10 font-sans">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20">
+          <div className="h-12 w-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/20">
             <FileText className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-3xl font-black tracking-tight">Reports & Exports</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Reports & Exports</h2>
             <p className="text-muted-foreground text-sm font-medium">Generate and download business intelligence reports.</p>
           </div>
         </div>
@@ -89,10 +79,10 @@ const Reports = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {reportModules.map((module) => (
-          <Card key={module.title} className="border border-border shadow-sm overflow-hidden group bg-card rounded-[2rem]">
+          <Card key={module.title} className="border border-border shadow-sm overflow-hidden group bg-card rounded-lg">
             <CardHeader className="pb-4">
                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-muted text-primary border border-border shadow-sm">
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-muted text-primary border border-border shadow-sm">
                      <module.icon className="h-5 w-5" />
                   </div>
                   <div>
@@ -103,16 +93,16 @@ const Reports = () => {
             </CardHeader>
             <CardContent className="space-y-3">
                {module.reports.map((report) => (
-                 <div key={report.name} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-transparent hover:border-border hover:bg-muted/50 transition-all group/item">
+                 <div key={report.name} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-transparent hover:border-border hover:bg-muted/50 transition-all group/item">
                     <div className="flex items-center gap-3">
                        <div className="h-2 w-2 rounded-full bg-primary/40 group-hover/item:bg-primary" />
-                       <span className="text-sm font-bold">{report.name}</span>
+                       <span className="text-sm font-semibold">{report.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
                        <Button 
                          variant="ghost" 
                          size="sm" 
-                         className="h-8 px-3 text-[10px] font-black uppercase tracking-widest hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                         className="h-8 px-3 text-[10px] font-semibold uppercase tracking-widest hover:bg-accent hover:text-accent-foreground cursor-pointer rounded-md"
                          onClick={() => handleDownload(report.endpoint, report.filename, "csv")}
                          disabled={!!isExporting}
                        >
@@ -122,7 +112,7 @@ const Reports = () => {
                        <Button 
                          variant="ghost" 
                          size="sm" 
-                         className="h-8 px-3 text-[10px] font-black uppercase tracking-widest hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                         className="h-8 px-3 text-[10px] font-semibold uppercase tracking-widest hover:bg-accent hover:text-accent-foreground cursor-pointer rounded-md"
                          onClick={() => handleDownload(report.endpoint, report.filename, "pdf")}
                          disabled={!!isExporting}
                        >
@@ -137,16 +127,16 @@ const Reports = () => {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm bg-primary text-primary-foreground p-8 rounded-[2.5rem] overflow-hidden relative">
+      <Card className="border-none shadow-sm bg-primary text-primary-foreground p-8 rounded-lg overflow-hidden relative">
          <div className="absolute top-0 right-0 w-64 h-64 -mr-20 -mt-20 rounded-full bg-white/5" />
          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-4 text-center md:text-left">
-               <h3 className="text-3xl font-black tracking-tight">Need custom insights?</h3>
+               <h3 className="text-3xl font-bold tracking-tight">Need custom insights?</h3>
                <p className="text-primary-foreground/70 max-w-md font-medium">
                   If you require a specialized report not listed here, please contact the administrator for a custom data export request.
                </p>
             </div>
-            <Button variant="secondary" className="h-14 px-8 rounded-2xl font-bold text-base shadow-xl text-primary" onClick={() => window.location.href = "mailto:admin@nextstock.com"}>
+            <Button variant="secondary" className="h-14 px-8 rounded-md font-bold text-base shadow-xl text-primary" onClick={() => window.location.href = "mailto:admin@nextstock.com"}>
                Request Custom Report
                <ChevronRight className="ml-2 h-5 w-5" />
             </Button>

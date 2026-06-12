@@ -2,19 +2,29 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useGetPurchaseQuery,
-  useCreatePurchaseMutation,
-  useUpdatePurchaseMutation
+import { 
+  useGetPurchaseQuery, 
+  useCreatePurchaseMutation, 
+  useUpdatePurchaseMutation 
 } from "../features/inventory/purchaseApiSlice";
 import { useGetVendorsQuery } from "../features/inventory/vendorApiSlice";
 import { useGetProductsQuery } from "../features/inventory/productApiSlice";
+import { useGetApprovedRequisitionsQuery } from "../features/inventory/requisitionApiSlice";
 import { purchaseSchema, type PurchaseValues } from "../lib/schemas";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
+import { Checkbox } from "../components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import {
   Select,
   SelectContent,
@@ -29,15 +39,16 @@ import {
   Plus, 
   Trash2, 
   ShoppingCart,
-  Calendar,
   Building2,
   Package,
   IndianRupee,
-  FileText
+  FileText,
+  ClipboardCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBreadcrumb } from "@/context/BreadcrumbContext";
+import { UnsavedChangesDialog } from "../components/common/UnsavedChangesDialog";
 
 const PurchaseForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,10 +58,13 @@ const PurchaseForm = () => {
 
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRequisitionSectionOpen, setIsRequisitionSectionOpen] = useState(false);
+  const [selectedReqs, setSelectedReqs] = useState<string[]>([]);
 
   const { data: purchase, isLoading: isPurchaseLoading } = useGetPurchaseQuery(id!, { skip: !isEditMode });
   const { data: vendorsData } = useGetVendorsQuery({ limit: 100 });
   const { data: productsData } = useGetProductsQuery({ limit: 100 });
+  const { data: approvedReqs, isLoading: isLoadingReqs } = useGetApprovedRequisitionsQuery();
   
   const [createPurchase, { isLoading: isCreating }] = useCreatePurchaseMutation();
   const [updatePurchase, { isLoading: isUpdating }] = useUpdatePurchaseMutation();
@@ -80,6 +94,36 @@ const PurchaseForm = () => {
 
   const watchItems = watch("items");
   const totalAmount = watchItems?.reduce((sum, item) => sum + (item.quantity * item.unitPrice || 0), 0) || 0;
+
+  const handleToggleReqSelection = (reqId: string) => {
+    setSelectedReqs(prev => 
+      prev.includes(reqId) ? prev.filter(id => id !== reqId) : [...prev, reqId]
+    );
+  };
+
+  const handleAddFromReqs = () => {
+    const itemsToAdd = approvedReqs?.requisitions.filter(r => selectedReqs.includes(r.id)) || [];
+    
+    if (itemsToAdd.length === 0) return toast.error("No items selected");
+
+    // Remove the initial empty item if it exists and no other items are present
+    if (fields.length === 1 && !watchItems[0].productId) {
+      remove(0);
+    }
+
+    itemsToAdd.forEach(req => {
+      append({
+        productId: req.product.id,
+        quantity: req.quantity,
+        unitPrice: 0,
+        requisitionId: req.id
+      });
+    });
+
+    setSelectedReqs([]);
+    setIsRequisitionSectionOpen(false);
+    toast.success(`Added ${itemsToAdd.length} items from requisitions`);
+  };
 
   useEffect(() => {
     if (isEditMode && purchase) {
@@ -167,6 +211,7 @@ const PurchaseForm = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20 px-4">
+      <UnsavedChangesDialog isDirty={isDirty || !!invoiceFile} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -189,9 +234,87 @@ const PurchaseForm = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Main Form Fields */}
         <div className="lg:col-span-8 space-y-12">
+           {/* Section: Requisitions Integration */}
+           {!isEditMode && (
+             <section className="bg-primary/5 border border-primary/10 rounded-lg p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+                      <ClipboardCheck className="h-4 w-4" />
+                      <span>Approved Requisitions</span>
+                   </div>
+                   <Button 
+                     type="button" 
+                     variant="outline" 
+                     size="sm" 
+                     onClick={() => setIsRequisitionSectionOpen(!isRequisitionSectionOpen)}
+                     className="rounded-md border-primary/20 text-primary hover:bg-primary/10"
+                   >
+                      {isRequisitionSectionOpen ? "Hide Requisitions" : "Load Approved Requests"}
+                   </Button>
+                </div>
+
+                {isRequisitionSectionOpen && (
+                  <div className="space-y-4">
+                     {isLoadingReqs ? (
+                       <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary h-6 w-6" /></div>
+                     ) : approvedReqs?.requisitions.length === 0 ? (
+                       <p className="text-center py-8 text-sm text-muted-foreground">No approved requisitions pending.</p>
+                     ) : (
+                       <>
+                         <div className="rounded-md border bg-card overflow-hidden">
+                           <Table>
+                             <TableHeader className="bg-muted/50">
+                               <TableRow>
+                                 <TableHead className="w-10"></TableHead>
+                                 <TableHead className="text-[10px] font-semibold uppercase">Product</TableHead>
+                                 <TableHead className="text-[10px] font-semibold uppercase text-center">Qty</TableHead>
+                                 <TableHead className="text-[10px] font-semibold uppercase">Requested By</TableHead>
+                               </TableRow>
+                             </TableHeader>
+                             <TableBody>
+                               {approvedReqs?.requisitions.map((req) => (
+                                 <TableRow key={req.id} className="hover:bg-muted/30">
+                                   <TableCell>
+                                      <Checkbox 
+                                        checked={selectedReqs.includes(req.id)}
+                                        onCheckedChange={() => handleToggleReqSelection(req.id)}
+                                      />
+                                   </TableCell>
+                                   <TableCell className="text-sm">
+                                      <div className="flex flex-col">
+                                         <span className="font-semibold">{req.product.name}</span>
+                                         <span className="text-[10px] text-muted-foreground uppercase">{req.product.sku}</span>
+                                      </div>
+                                   </TableCell>
+                                   <TableCell className="text-center font-bold text-sm">
+                                      {req.quantity}
+                                   </TableCell>
+                                   <TableCell className="text-[10px] font-medium text-muted-foreground">
+                                      {req.requester.name}
+                                   </TableCell>
+                                 </TableRow>
+                               ))}
+                             </TableBody>
+                           </Table>
+                         </div>
+                         <Button 
+                           type="button" 
+                           onClick={handleAddFromReqs} 
+                           disabled={selectedReqs.length === 0}
+                           className="w-full rounded-md font-bold"
+                         >
+                            Add {selectedReqs.length} Selected to Order
+                         </Button>
+                       </>
+                     )}
+                  </div>
+                )}
+             </section>
+           )}
+
            {/* Section 1: Vendor & Schedule */}
            <section className="space-y-6">
-              <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+              <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                  <Building2 className="h-4 w-4" />
                  <span>Vendor & Schedule</span>
               </div>
@@ -203,7 +326,7 @@ const PurchaseForm = () => {
                       control={control}
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="h-12 bg-background/50 cursor-pointer">
+                          <SelectTrigger className="h-12 bg-background/50 cursor-pointer rounded-md">
                             <SelectValue placeholder="Choose Supplier" />
                           </SelectTrigger>
                           <SelectContent>
@@ -219,12 +342,12 @@ const PurchaseForm = () => {
 
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Order Date</Label>
-                    <Input type="date" {...register("purchaseDate")} className="h-12 bg-background/50" />
+                    <Input type="date" {...register("purchaseDate")} className="h-12 bg-background/50 rounded-md" />
                  </div>
 
                  <div className="grid gap-2">
                     <Label className="text-sm font-semibold">Expected Delivery</Label>
-                    <Input type="date" {...register("expectedDelivery")} className="h-12 bg-background/50" />
+                    <Input type="date" {...register("expectedDelivery")} className="h-12 bg-background/50 rounded-md" />
                  </div>
               </div>
            </section>
@@ -234,7 +357,7 @@ const PurchaseForm = () => {
            {/* Section 2: Items List */}
            <section className="space-y-6">
               <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+                 <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                     <Package className="h-4 w-4" />
                     <span>Line Items</span>
                  </div>
@@ -243,7 +366,7 @@ const PurchaseForm = () => {
                    variant="outline" 
                    size="sm" 
                    onClick={() => append({ productId: "", quantity: 1, unitPrice: 0 })}
-                   className="h-8 rounded-full border-dashed hover:border-primary hover:text-primary cursor-pointer"
+                   className="h-8 rounded-md border-dashed hover:border-primary hover:text-primary cursor-pointer"
                  >
                     <Plus className="mr-1 h-3 w-3" /> Add Item
                  </Button>
@@ -257,16 +380,16 @@ const PurchaseForm = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-muted/20 p-4 rounded-xl border border-muted-foreground/10 group"
+                        className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-muted/20 p-4 rounded-lg border border-muted-foreground/10 group"
                       >
                          <div className="md:col-span-6 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Product</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Product</Label>
                             <Controller
                               name={`items.${index}.productId`}
                               control={control}
                               render={({ field }) => (
                                 <Select onValueChange={field.onChange} value={field.value}>
-                                  <SelectTrigger className="h-10 bg-background cursor-pointer">
+                                  <SelectTrigger className="h-10 bg-background cursor-pointer rounded-md">
                                     <SelectValue placeholder="Select Item" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -280,23 +403,23 @@ const PurchaseForm = () => {
                          </div>
 
                          <div className="md:col-span-2 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Quantity</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Quantity</Label>
                             <Input 
                               type="number" 
                               {...register(`items.${index}.quantity`, { valueAsNumber: true })} 
-                              className="h-10 bg-background font-bold text-center" 
+                              className="h-10 bg-background font-semibold text-center rounded-md" 
                             />
                          </div>
 
                          <div className="md:col-span-3 grid gap-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Unit Price</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Unit Price</Label>
                             <div className="relative">
                                <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                                <Input 
                                  type="number" 
                                  step="0.01" 
                                  {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} 
-                                 className="h-10 pl-7 bg-background font-bold" 
+                                 className="h-10 pl-7 bg-background font-semibold rounded-md" 
                                />
                             </div>
                          </div>
@@ -323,9 +446,9 @@ const PurchaseForm = () => {
 
         {/* Sidebar: Summary & Actions */}
         <div className="lg:col-span-4 space-y-6">
-           <div className="rounded-2xl border bg-card p-6 space-y-6 shadow-sm sticky top-24">
+           <div className="rounded-lg border bg-card p-6 space-y-6 shadow-sm sticky top-24">
               <div className="space-y-4">
-                 <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px]">
+                 <div className="flex items-center gap-2 text-primary font-semibold uppercase tracking-widest text-[10px]">
                     <ShoppingCart className="h-4 w-4" />
                     <span>Order Summary</span>
                  </div>
@@ -333,7 +456,7 @@ const PurchaseForm = () => {
                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Total Items</span>
-                       <span className="font-bold">{watchItems?.length || 0}</span>
+                       <span className="font-semibold">{watchItems?.length || 0}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Status</span>
@@ -341,17 +464,17 @@ const PurchaseForm = () => {
                     </div>
                     <Separator />
                     <div className="flex justify-between items-baseline pt-2">
-                       <span className="font-bold text-base">Grand Total</span>
-                       <span className="text-3xl font-black text-primary">₹{totalAmount.toLocaleString()}</span>
+                       <span className="font-semibold text-base">Grand Total</span>
+                       <span className="text-3xl font-bold text-primary">₹{totalAmount.toLocaleString()}</span>
                     </div>
                  </div>
               </div>
 
               <div className="grid gap-4 pt-4">
                  <div className="grid gap-2">
-                    <Label className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">Invoice Document (Optional)</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-tighter text-muted-foreground">Invoice Document (Optional)</Label>
                     <div className="flex items-center gap-3">
-                       <label className="flex-1 flex items-center justify-center gap-2 h-12 border-2 border-dashed border-muted-foreground/20 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group overflow-hidden px-4">
+                       <label className="flex-1 flex items-center justify-center gap-2 h-12 border-2 border-dashed border-muted-foreground/20 rounded-lg hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group overflow-hidden px-4">
                           <FileText className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
                           <span className="text-xs font-medium text-muted-foreground group-hover:text-primary truncate">
                              {invoiceFile ? invoiceFile.name : (purchase?.invoiceUrl ? "Replace current invoice" : "Upload Invoice (PDF)")}
@@ -359,7 +482,7 @@ const PurchaseForm = () => {
                           <input type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
                        </label>
                        {invoiceFile && (
-                         <Button type="button" variant="ghost" size="icon" onClick={() => setInvoiceFile(null)} className="h-12 w-12 rounded-xl text-destructive">
+                         <Button type="button" variant="ghost" size="icon" onClick={() => setInvoiceFile(null)} className="h-12 w-12 rounded-md text-destructive">
                             <Trash2 className="h-4 w-4" />
                          </Button>
                        )}
@@ -367,10 +490,10 @@ const PurchaseForm = () => {
                  </div>
 
                  <div className="grid gap-2">
-                    <Label className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">Notes / Comments</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-tighter text-muted-foreground">Notes / Comments</Label>
                     <textarea 
                       {...register("notes")} 
-                      className="min-h-[100px] w-full rounded-xl border bg-muted/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                      className="min-h-[100px] w-full rounded-md border bg-muted/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                       placeholder="Shipping instructions, etc."
                     />
                  </div>
@@ -380,7 +503,7 @@ const PurchaseForm = () => {
                  <Button 
                    type="submit" 
                    disabled={isCreating || isUpdating || (!isDirty && !invoiceFile) || isUploading} 
-                   className="w-full h-14 text-base font-bold rounded-2xl shadow-xl shadow-primary/20 cursor-pointer"
+                   className="w-full h-14 text-base font-semibold rounded-md shadow-xl shadow-primary/20 cursor-pointer"
                  >
                     {isCreating || isUpdating || isUploading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -395,7 +518,7 @@ const PurchaseForm = () => {
                    type="button" 
                    variant="ghost" 
                    onClick={() => navigate("/purchases")} 
-                   className="w-full h-12 rounded-xl text-muted-foreground cursor-pointer hover:bg-muted/50"
+                   className="w-full h-12 rounded-md text-muted-foreground cursor-pointer hover:bg-muted/50"
                  >
                     Cancel
                  </Button>

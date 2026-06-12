@@ -149,7 +149,7 @@ const Sales = () => {
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
@@ -174,7 +174,7 @@ const Sales = () => {
           </Table>
         </div>
       ) : (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl border bg-card overflow-hidden shadow-sm">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-lg border bg-card overflow-hidden shadow-sm">
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
@@ -189,8 +189,41 @@ const Sales = () => {
             <TableBody>
               {data?.sales.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
-                    No sales orders found.
+                  <TableCell colSpan={6} className="h-[400px] text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500">
+                      <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
+                        <Banknote className="h-10 w-10 text-primary/40" />
+                      </div>
+                      <div className="space-y-2 max-w-[300px] mx-auto">
+                        <p className="text-xl font-bold tracking-tight">No sales orders</p>
+                        <p className="text-sm text-muted-foreground font-medium">No sales transactions found. Start by creating a new sale or adjusting your filters.</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setFilters({
+                            page: 1,
+                            limit: 10,
+                            search: "",
+                            status: undefined,
+                            paymentStatus: undefined,
+                          })}
+                          className="rounded-full px-6 font-semibold"
+                        >
+                          Clear filters
+                        </Button>
+                        {isAdmin && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => navigate("/sales/add")}
+                            className="rounded-full px-6 font-semibold"
+                          >
+                            New Sale
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -198,8 +231,8 @@ const Sales = () => {
                   <TableRow key={sale.id} className="group hover:bg-muted/20 cursor-pointer transition-colors" onClick={() => navigate(`/sales/${sale.id}`)}>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <span className="font-black text-sm tracking-tight">{sale.invoiceNumber}</span>
-                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
+                        <span className="font-semibold text-sm tracking-tight">{sale.invoiceNumber}</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
                           <Calendar className="h-3 w-3" />
                           {new Date(sale.saleDate).toLocaleDateString()}
                         </div>
@@ -218,8 +251,8 @@ const Sales = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-sm font-black">₹{sale.totalAmount.toLocaleString()}</span>
-                        <span className="text-[10px] text-muted-foreground font-medium italic">{sale._count?.items || 0} items</span>
+                        <span className="text-sm font-semibold">₹{sale.totalAmount.toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">{sale._count?.items || 0} items</span>
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(sale.status)}</TableCell>
@@ -238,10 +271,10 @@ const Sales = () => {
       )}
 
       {/* Pagination */}
-      {!isLoading && data && data.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border rounded-xl p-4 bg-card shadow-sm mt-4">
+      {!isLoading && data && (
+        <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
           <div className="text-sm text-muted-foreground font-medium">
-            Showing <span className="text-foreground font-bold">{data.sales.length}</span> of <span className="text-foreground font-bold">{data.pagination.total}</span> sales
+            Showing <span className="text-foreground font-semibold">{data.sales.length}</span> of <span className="text-foreground font-semibold">{data.pagination.total}</span> sales
           </div>
           <Pagination className="w-auto mx-0">
             <PaginationContent>
@@ -251,8 +284,8 @@ const Sales = () => {
                   onClick={() => setFilters(p => ({ ...p, page: Math.max(1, (p.page || 1) - 1) }))} 
                 />
               </PaginationItem>
-              <div className="px-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                Page {data.pagination.page} / {data.pagination.totalPages}
+              <div className="px-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Page {data.pagination.page} / {data.pagination.totalPages || 1}
               </div>
               <PaginationItem>
                 <PaginationNext 

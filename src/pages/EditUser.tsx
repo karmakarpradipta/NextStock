@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "../components/ui/skeleton";
+import { UnsavedChangesDialog } from "../components/common/UnsavedChangesDialog";
 
 const EditUser = () => {
   const { id } = useParams<{ id: string }>();
@@ -165,6 +166,7 @@ const EditUser = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-16 py-8 pb-32 px-4">
+      <UnsavedChangesDialog isDirty={isProfileDirty || isResetDirty} />
       {/* Header Section */}
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
@@ -223,7 +225,7 @@ const EditUser = () => {
         <div className="space-y-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
             <div className="lg:col-span-4 space-y-4">
-               <Skeleton className="h-10 w-48 rounded-xl" />
+               <Skeleton className="h-10 w-48 rounded-lg" />
                <Skeleton className="h-20 w-full rounded-lg" />
             </div>
             <div className="lg:col-span-8 space-y-6">
@@ -240,7 +242,7 @@ const EditUser = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
             <div className="lg:col-span-4 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                   <UserCog className="h-5 w-5" />
                 </div>
                 <h3 className="text-xl font-bold">Profile Settings</h3>
@@ -309,7 +311,7 @@ const EditUser = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
             <div className="lg:col-span-4 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <h3 className="text-xl font-bold">Security & Access</h3>

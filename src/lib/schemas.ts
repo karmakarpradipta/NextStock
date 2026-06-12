@@ -78,6 +78,7 @@ export const purchaseSchema = z.object({
     productId: z.string().min(1, { message: "Product is required." }),
     quantity: z.number().min(1, { message: "Qty min 1." }),
     unitPrice: z.number().min(0, { message: "Price min 0." }),
+    requisitionId: z.string().optional(),
   })).min(1, { message: "Add at least one item." }),
 });
 

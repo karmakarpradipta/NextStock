@@ -185,8 +185,40 @@ const Vendors = () => {
             <TableBody>
               {data?.vendors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                    No vendors found matching your filters.
+                  <TableCell colSpan={5} className="h-[400px] text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500">
+                      <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
+                        <Users className="h-10 w-10 text-primary/40" />
+                      </div>
+                      <div className="space-y-2 max-w-[300px] mx-auto">
+                        <p className="text-xl font-bold tracking-tight">No vendors found</p>
+                        <p className="text-sm text-muted-foreground font-medium">We couldn't find any vendors matching your criteria.</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setFilters({
+                            page: 1,
+                            limit: 10,
+                            search: "",
+                            isActive: "",
+                          })}
+                          className="rounded-full px-6 font-semibold"
+                        >
+                          Clear filters
+                        </Button>
+                        {isAdmin && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => navigate("/vendors/add")}
+                            className="rounded-full px-6 font-semibold"
+                          >
+                            Add Vendor
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -217,11 +249,11 @@ const Vendors = () => {
                     <TableCell>
                       <div className="flex gap-2">
                         <div className="flex flex-col items-center justify-center h-10 w-12 rounded-lg bg-muted/50 border border-muted-foreground/10">
-                          <span className="text-xs font-bold leading-none">{vendor._count?.purchaseOrders || 0}</span>
+                          <span className="text-xs font-medium leading-none">{vendor._count?.purchaseOrders || 0}</span>
                           <span className="text-[8px] text-muted-foreground uppercase mt-0.5">Orders</span>
                         </div>
                         <div className="flex flex-col items-center justify-center h-10 w-12 rounded-lg bg-muted/50 border border-muted-foreground/10">
-                          <span className="text-xs font-bold leading-none">{vendor._count?.vendorProducts || 0}</span>
+                          <span className="text-xs font-medium leading-none">{vendor._count?.vendorProducts || 0}</span>
                           <span className="text-[8px] text-muted-foreground uppercase mt-0.5">Items</span>
                         </div>
                       </div>
@@ -274,7 +306,7 @@ const Vendors = () => {
       )}
 
       {/* Pagination Controls */}
-      {!isLoading && data && data.pagination.totalPages > 1 && (
+      {!isLoading && data && (
         <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
           <div className="text-sm text-muted-foreground">
             Showing <span className="font-medium text-foreground">{data.vendors.length}</span> of <span className="font-medium text-foreground">{data.pagination.total}</span> vendors
@@ -292,7 +324,7 @@ const Vendors = () => {
               </PaginationItem>
               
               <div className="flex items-center gap-1 mx-2 text-sm font-medium">
-                Page {data.pagination.page} of {data.pagination.totalPages}
+                Page {data.pagination.page} of {data.pagination.totalPages || 1}
               </div>
 
               <PaginationItem>

@@ -154,7 +154,7 @@ const Products = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleStockFilter} value={filters.lowStock || "all"}>
+        <Select onValueChange={handleStockFilter} value={String(filters.lowStock || "all")}>
           <SelectTrigger>
             <SelectValue placeholder="Stock Level" />
           </SelectTrigger>
@@ -232,8 +232,31 @@ const Products = () => {
             <TableBody>
               {data?.products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-32 text-center text-muted-foreground">
-                    No products found matching your filters.
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-[400px] text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500">
+                      <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center ring-8 ring-muted/20">
+                        <Search className="h-10 w-10 text-muted-foreground/40" />
+                      </div>
+                      <div className="space-y-2 max-w-[280px] mx-auto">
+                        <p className="text-xl font-bold tracking-tight">No products found</p>
+                        <p className="text-sm text-muted-foreground font-medium">Try adjusting your filters or search terms to find what you're looking for.</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setFilters({
+                          page: 1,
+                          limit: 10,
+                          search: "",
+                          categoryId: "",
+                          isActive: "",
+                          lowStock: "",
+                        })}
+                        className="rounded-full px-6 font-semibold"
+                      >
+                        Clear all filters
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -271,7 +294,7 @@ const Products = () => {
                           <div className="flex items-center">
                             <Badge 
                               variant="outline" 
-                              className="rounded-full bg-red-50/50 text-red-600 border-red-200/60 px-2 py-0 text-[10px] font-bold leading-5 h-5 flex items-center justify-center tracking-tight shadow-[0_1px_2px_rgba(220,38,38,0.05)]"
+                              className="rounded-full bg-red-50/50 text-red-600 border-red-200/60 px-2 py-0 text-[10px] font-medium leading-5 h-5 flex items-center justify-center tracking-tight shadow-[0_1px_2px_rgba(220,38,38,0.05)]"
                             >
                               LOW STOCK
                             </Badge>
@@ -314,7 +337,7 @@ const Products = () => {
       )}
 
       {/* Pagination Controls */}
-      {!isLoading && data && data.pagination.totalPages > 1 && (
+      {!isLoading && data && (
         <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
           <div className="text-sm text-muted-foreground">
             Showing <span className="font-medium text-foreground">{data.products.length}</span> of <span className="font-medium text-foreground">{data.pagination.total}</span> products
@@ -332,7 +355,7 @@ const Products = () => {
               </PaginationItem>
               
               <div className="flex items-center gap-1 mx-2 text-sm font-medium">
-                Page {data.pagination.page} of {data.pagination.totalPages}
+                Page {data.pagination.page} of {data.pagination.totalPages || 1}
               </div>
 
               <PaginationItem>

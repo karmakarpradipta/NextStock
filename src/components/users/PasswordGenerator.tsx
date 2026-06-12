@@ -60,7 +60,7 @@ export function PasswordGenerator({ onGenerate }: PasswordGeneratorProps) {
           </Button>
         </div>
       )}
-      <p className="text-[11px] text-muted-foreground italic">
+      <p className="text-[11px] text-muted-foreground">
         Generates a secure 12-character password.
       </p>
     </div>
