@@ -21,7 +21,9 @@ import {
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
+  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "../components/ui/pagination";
@@ -48,6 +50,13 @@ import {
   Activity,
   ArrowRight
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { toast } from "sonner";
 import { useAppSelector } from "../store/hooks";
 import { selectCurrentUser } from "../features/auth/authSlice";
@@ -71,7 +80,7 @@ const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   const {
     register,
@@ -333,29 +342,94 @@ const Categories = () => {
 
           {/* Pagination */}
           {!isLoading && categories && (
-            <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
-              <div className="text-sm text-muted-foreground font-medium">
-                Showing <span className="text-foreground font-semibold">{paginatedCategories.length}</span> of <span className="text-foreground font-semibold">{filteredCategories.length}</span> categories
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 border rounded-lg p-4 bg-card shadow-sm mt-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground font-medium">
+                <div>
+                  Showing <span className="text-foreground font-semibold">{paginatedCategories.length}</span> of <span className="text-foreground font-semibold">{filteredCategories.length}</span> categories
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span>Rows per page:</span>
+                  <Select 
+                    value={String(limit)} 
+                    onValueChange={(val) => {
+                      setLimit(parseInt(val));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue placeholder={limit} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 20, 50, 100].map((pageSize) => (
+                        <SelectItem key={pageSize} value={String(pageSize)}>
+                          {pageSize}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Pagination className="w-auto mx-0">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      className={cn("cursor-pointer", page <= 1 && "pointer-events-none opacity-50")} 
-                      onClick={() => setPage(p => Math.max(1, p - 1))} 
-                    />
-                  </PaginationItem>
-                  <div className="px-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Page {page} / {totalPages}
-                  </div>
-                  <PaginationItem>
-                    <PaginationNext 
-                      className={cn("cursor-pointer", page >= totalPages && "pointer-events-none opacity-50")} 
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#"
+                  className={cn(page <= 1 && "pointer-events-none opacity-50")} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(p => Math.max(1, p - 1));
+                  }}
+                />
+              </PaginationItem>
+
+              {/* Page Numbers */}
+              {(() => {
+                const pages = [];
+                if (totalPages <= 5) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (page > 3) pages.push("ellipsis-1");
+                  const start = Math.max(2, page - 1);
+                  const end = Math.min(totalPages - 1, page + 1);
+                  for (let i = start; i <= end; i++) { if (!pages.includes(i)) pages.push(i); }
+                  if (page < totalPages - 2) pages.push("ellipsis-2");
+                  if (!pages.includes(totalPages)) pages.push(totalPages);
+                }
+                return pages.map((p, i) => {
+                  if (typeof p === "string") {
+                    return <PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>;
+                  }
+                  return (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === p}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPage(p);
+                        }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                });
+              })()}
+
+              <PaginationItem>
+                <PaginationNext 
+                  href="#"
+                  className={cn(page >= totalPages && "pointer-events-none opacity-50")} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(p => Math.min(totalPages, p + 1));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
             </div>
           )}
         </div>

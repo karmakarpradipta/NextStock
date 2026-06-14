@@ -35,11 +35,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useAppDispatch, useAppSelector } from "../store/hooks"
 import { logOut, selectCurrentUser } from "../features/auth/authSlice"
 import { useLogoutMutation } from "../features/auth/authApiSlice"
 import { useGetRequisitionsQuery } from "../features/inventory/requisitionApiSlice"
-import { useNavigate, Link, useLocation } from "react-router-dom"
+import { useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export function AppSidebar() {
   const user = useAppSelector(selectCurrentUser)
@@ -47,6 +58,7 @@ export function AppSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [logout] = useLogoutMutation()
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const { data: pendingReqs } = useGetRequisitionsQuery(
     { status: "PENDING", limit: 1 },
@@ -56,6 +68,7 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
+      setShowLogoutConfirm(false)
       await logout({}).unwrap()
     } catch (err) {
       console.error("Failed to logout:", err)
@@ -185,12 +198,29 @@ export function AppSidebar() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile & Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You will be redirected to the login page and will need to provide your credentials again to access your account.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Logout
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

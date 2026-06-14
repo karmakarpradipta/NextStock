@@ -20,7 +20,9 @@ import {
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
+  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "../components/ui/pagination";
@@ -89,7 +91,7 @@ const Requisitions = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value === "all" ? undefined : value,
-      page: 1,
+      page: key === "page" ? value : 1,
     }));
   };
 
@@ -454,31 +456,95 @@ const Requisitions = () => {
 
       {/* Pagination */}
       {!isLoading && data && (
-        <div className="flex items-center justify-between border rounded-lg p-4 bg-card shadow-sm mt-4">
-          <div className="text-sm text-muted-foreground font-medium">
-            Showing <span className="text-foreground font-semibold">{data.requisitions.length}</span> of <span className="text-foreground font-semibold">{data.pagination.total}</span> requests
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border rounded-lg p-6 bg-card shadow-sm mt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground font-medium">
+            <div>
+              Showing <span className="text-foreground font-semibold">{data.requisitions.length}</span> of <span className="text-foreground font-semibold">{data.pagination.total}</span> requests
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <Select 
+                value={String(filters.limit)} 
+                onValueChange={(val) => handleFilterChange("limit", parseInt(val))}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder={filters.limit} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 50, 100].map((pageSize) => (
+                    <SelectItem key={pageSize} value={String(pageSize)}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Pagination className="w-auto mx-0">
             <PaginationContent className="gap-2">
               <PaginationItem>
                 <PaginationPrevious
+                  href="#"
                   className={cn(
-                    "cursor-pointer rounded-md font-semibold",
+                    "rounded-md font-semibold",
                     data.pagination.page <= 1 && "pointer-events-none opacity-50"
                   )}
-                  onClick={() => handleFilterChange("page", Math.max(1, (filters.page || 1) - 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleFilterChange("page", Math.max(1, (filters.page || 1) - 1));
+                  }}
                 />
               </PaginationItem>
-              <div className="px-3 py-1.5 rounded-md bg-muted text-xs font-semibold">
-                Page {data.pagination.page} / {data.pagination.totalPages || 1}
-              </div>
+
+              {/* Page Numbers */}
+              {(() => {
+                const totalPages = data.pagination.totalPages;
+                const currentPage = data.pagination.page;
+                const pages = [];
+                if (totalPages <= 5) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage > 3) pages.push("ellipsis-1");
+                  const start = Math.max(2, currentPage - 1);
+                  const end = Math.min(totalPages - 1, currentPage + 1);
+                  for (let i = start; i <= end; i++) { if (!pages.includes(i)) pages.push(i); }
+                  if (currentPage < totalPages - 2) pages.push("ellipsis-2");
+                  if (!pages.includes(totalPages)) pages.push(totalPages);
+                }
+                return pages.map((page, i) => {
+                  if (typeof page === "string") {
+                    return <PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>;
+                  }
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        isActive={currentPage === page}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleFilterChange("page", page);
+                        }}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                });
+              })()}
+
               <PaginationItem>
                 <PaginationNext
+                  href="#"
                   className={cn(
-                    "cursor-pointer rounded-md font-semibold",
+                    "rounded-md font-semibold",
                     data.pagination.page >= data.pagination.totalPages && "pointer-events-none opacity-50"
                   )}
-                  onClick={() => handleFilterChange("page", Math.min(data.pagination.totalPages, (filters.page || 1) + 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleFilterChange("page", Math.min(data.pagination.totalPages, (filters.page || 1) + 1));
+                  }}
                 />
               </PaginationItem>
             </PaginationContent>

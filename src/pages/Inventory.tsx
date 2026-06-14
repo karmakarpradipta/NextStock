@@ -16,7 +16,9 @@ import {
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
+  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "../components/ui/pagination";
@@ -45,6 +47,13 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -59,10 +68,11 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState<"all" | "low">("all");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const { data, isLoading, refetch, isFetching } = useGetProductsQuery({
     page,
-    limit: 10,
+    limit,
     search: searchTerm,
     lowStock: stockFilter === "low" ? "true" : undefined
   });
@@ -337,31 +347,98 @@ const Inventory = () => {
 
       {/* Pagination */}
       {!isLoading && data && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border rounded-lg p-6 bg-card shadow-sm mt-4">
-          <div className="text-sm text-muted-foreground font-medium">
-            Showing <span className="text-foreground font-semibold">{data.products.length}</span> of <span className="text-foreground font-semibold">{data.pagination.total}</span> items
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border rounded-lg p-6 bg-card shadow-sm mt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground font-medium">
+            <div>
+              Showing <span className="text-foreground font-semibold">{data.products.length}</span> of <span className="text-foreground font-semibold">{data.pagination.total}</span> items
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <Select 
+                value={String(limit)} 
+                onValueChange={(val) => {
+                  setLimit(parseInt(val));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder={limit} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 50, 100].map((pageSize) => (
+                    <SelectItem key={pageSize} value={String(pageSize)}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Pagination className="w-auto mx-0">
             <PaginationContent className="gap-2">
               <PaginationItem>
                 <PaginationPrevious
+                  href="#"
                   className={cn(
-                    "cursor-pointer rounded-md font-semibold border-border",
+                    "rounded-md font-semibold border-border",
                     data.pagination.page <= 1 && "pointer-events-none opacity-50"
                   )}
-                  onClick={() => setPage(Math.max(1, page - 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(Math.max(1, page - 1));
+                  }}
                 />
               </PaginationItem>
-              <div className="px-4 py-2 rounded-md bg-muted/50 text-xs font-semibold uppercase tracking-widest text-muted-foreground border border-transparent">
-                Page {data.pagination.page} / {data.pagination.totalPages || 1}
-              </div>
+
+              {/* Page Numbers */}
+              {(() => {
+                const totalPages = data.pagination.totalPages;
+                const currentPage = data.pagination.page;
+                const pages = [];
+                if (totalPages <= 5) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage > 3) pages.push("ellipsis-1");
+                  const start = Math.max(2, currentPage - 1);
+                  const end = Math.min(totalPages - 1, currentPage + 1);
+                  for (let i = start; i <= end; i++) { if (!pages.includes(i)) pages.push(i); }
+                  if (currentPage < totalPages - 2) pages.push("ellipsis-2");
+                  if (!pages.includes(totalPages)) pages.push(totalPages);
+                }
+                return pages.map((p, i) => {
+                  if (typeof p === "string") {
+                    return <PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>;
+                  }
+                  return (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={currentPage === p}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPage(p);
+                        }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                });
+              })()}
+
               <PaginationItem>
                 <PaginationNext
+                  href="#"
                   className={cn(
-                    "cursor-pointer rounded-md font-semibold border-border",
+                    "rounded-md font-semibold border-border",
                     data.pagination.page >= data.pagination.totalPages && "pointer-events-none opacity-50"
                   )}
-                  onClick={() => setPage(Math.min(data.pagination.totalPages, page + 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(Math.min(data.pagination.totalPages, page + 1));
+                  }}
                 />
               </PaginationItem>
             </PaginationContent>
