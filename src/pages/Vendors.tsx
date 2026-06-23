@@ -53,7 +53,7 @@ import { Skeleton } from "../components/ui/skeleton";
 const Vendors = () => {
   const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
-  const isAdmin = user?.role === "ADMIN";
+  const canManage = user?.role === "ADMIN" || user?.role === "STAFF";
 
   const [filters, setFilters] = useState<VendorFilters>({
     page: 1,
@@ -95,7 +95,7 @@ const Vendors = () => {
             <p className="text-muted-foreground text-sm">Manage your suppliers and vendor contacts.</p>
           </div>
         </div>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => navigate("/vendors/add")} className="cursor-pointer">
             <Plus className="mr-2 h-4 w-4" />
             Add Vendor
@@ -210,7 +210,7 @@ const Vendors = () => {
                         >
                           Clear filters
                         </Button>
-                        {isAdmin && (
+                        {canManage && (
                           <Button 
                             size="sm" 
                             onClick={() => navigate("/vendors/add")}
@@ -276,7 +276,7 @@ const Vendors = () => {
                         >
                           <ArrowRight className="h-4 w-4" />
                         </Button>
-                        {isAdmin && (
+                         {canManage && (
                           <>
                             <Button 
                               variant="ghost" 

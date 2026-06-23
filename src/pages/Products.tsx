@@ -54,7 +54,7 @@ const Products = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const user = useAppSelector(selectCurrentUser);
-  const isAdmin = user?.role === "ADMIN";
+  const canManage = user?.role === "ADMIN" || user?.role === "STAFF";
 
   const [filters, setFilters] = useState<ProductFilters>({
     page: 1,
@@ -114,7 +114,7 @@ const Products = () => {
             <p className="text-muted-foreground text-sm">Manage your inventory items and stock levels.</p>
           </div>
         </div>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => navigate("/inventory/products/add")} className="cursor-pointer">
             <Plus className="mr-2 h-4 w-4" />
             Add Product
@@ -189,7 +189,7 @@ const Products = () => {
                 <TableHead>Stock / Unit</TableHead>
                 <TableHead>Min Threshold</TableHead>
                 <TableHead>Status</TableHead>
-                {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                {canManage && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -211,7 +211,7 @@ const Products = () => {
                   </TableCell>
                   <TableCell><Skeleton className="h-4 w-8" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                  {isAdmin && <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-md" /></TableCell>}
+                   {canManage && <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-md" /></TableCell>}
                 </TableRow>
               ))}
             </TableBody>
@@ -228,13 +228,13 @@ const Products = () => {
                 <TableHead>Stock / Unit</TableHead>
                 <TableHead>Min Threshold</TableHead>
                 <TableHead>Status</TableHead>
-                {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                 {canManage && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {data?.products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-[400px] text-center">
+                   <TableCell colSpan={canManage ? 7 : 6} className="h-[400px] text-center">
                     <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500">
                       <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center ring-8 ring-muted/20">
                         <Search className="h-10 w-10 text-muted-foreground/40" />
@@ -314,7 +314,7 @@ const Products = () => {
                         {product.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    {isAdmin && (
+                    {canManage && (
                       <TableCell className="text-right space-x-2">
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/inventory/products/${product.id}/edit`)} className="h-8 w-8 cursor-pointer hover:bg-primary/10 hover:text-primary">
                           <Edit className="h-4 w-4" />

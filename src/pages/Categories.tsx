@@ -67,7 +67,7 @@ import { useNavigate } from "react-router-dom";
 const Categories = () => {
   const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
-  const isAdmin = user?.role === "ADMIN";
+  const canManage = user?.role === "ADMIN" || user?.role === "STAFF";
   
   const { data: categories = [], isLoading, isError, refetch, isFetching } = useGetCategoriesQuery();
   const { data: productsData } = useGetProductsQuery({ limit: 1000 }); // Fetch products to calculate valuation/health
@@ -191,7 +191,7 @@ const Categories = () => {
                 onChange={handleSearchChange}
               />
            </div>
-           {isAdmin && (
+           {canManage && (
              <Button onClick={() => handleOpenModal()} className="h-11 px-6 rounded-md font-semibold shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90">
                <Plus className="mr-2 h-4 w-4" />
                New Category
@@ -308,7 +308,7 @@ const Categories = () => {
                                 Items
                                 <ArrowRight className="ml-1.5 h-3 w-3 transition-transform group-hover/btn:translate-x-0.5" />
                              </Button>
-                             {isAdmin && (
+                             {canManage && (
                                <>
                                  <Button 
                                   variant="ghost" 
