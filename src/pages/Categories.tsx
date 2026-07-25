@@ -86,6 +86,8 @@ const Categories = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CategoryValues>({
     resolver: zodResolver(categorySchema),
@@ -94,6 +96,8 @@ const Categories = () => {
       isActive: true,
     },
   });
+
+  const isActiveValue = watch("isActive");
 
   const onSubmit = async (data: CategoryValues) => {
     try {
@@ -159,7 +163,7 @@ const Categories = () => {
 
   // Helper to get stats for a category
   const getCategoryStats = (categoryId: string) => {
-    const categoryProducts = productsData?.products.filter(p => p.categoryId === categoryId) || [];
+    const categoryProducts = productsData?.products.filter(p => p.categoryId === categoryId || p.category?.id === categoryId) || [];
     const totalStock = categoryProducts.reduce((sum, p) => sum + p.currentStock, 0);
     const lowStockCount = categoryProducts.filter(p => p.isLowStock).length;
     return { totalStock, lowStockCount, productCount: categoryProducts.length };
@@ -181,23 +185,23 @@ const Categories = () => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-           <div className="relative w-64 hidden md:block">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+           <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Find category..." 
-                className="pl-9 h-11 border-none bg-card shadow-sm rounded-md text-foreground"
+                className="pl-9 h-11 border-none bg-card shadow-sm rounded-md text-foreground w-full"
                 value={searchTerm}
                 onChange={handleSearchChange}
               />
            </div>
            {canManage && (
-             <Button onClick={() => handleOpenModal()} className="h-11 px-6 rounded-md font-semibold shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90">
+             <Button onClick={() => handleOpenModal()} className="h-11 px-6 rounded-md font-semibold shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 flex-1 md:flex-none">
                <Plus className="mr-2 h-4 w-4" />
                New Category
              </Button>
            )}
-           <Button variant="outline" size="icon" onClick={() => refetch()} className="h-11 w-11 rounded-md cursor-pointer border-border">
+           <Button variant="outline" size="icon" onClick={() => refetch()} className="h-11 w-11 rounded-md cursor-pointer border-border shrink-0">
               <RotateCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
            </Button>
         </div>
@@ -472,8 +476,8 @@ const Categories = () => {
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Allow items in this category</p>
                  </div>
                  <Switch 
-                   checked={editingCategory?.isActive ?? true}
-                   onCheckedChange={(val) => reset(prev => ({ ...prev, isActive: val }))}
+                   checked={isActiveValue}
+                   onCheckedChange={(val) => setValue("isActive", val)}
                  />
               </div>
 
